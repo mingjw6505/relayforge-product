@@ -37,3 +37,9 @@ assert len(versions) == 1, f"manifest versions differ: {versions}"
 print(f"Plugin version: {versions.pop()}")
 PY
 ```
+
+Also verify that every skill front matter and UI metadata file is valid YAML:
+
+```bash
+ruby -e 'require "yaml"; Dir["skills/*/SKILL.md", "skills/*/agents/openai.yaml"].each { |path| text = File.read(path); text = text.split(/^---\s*$/)[1] if path.end_with?("SKILL.md"); YAML.safe_load(text) }'
+```

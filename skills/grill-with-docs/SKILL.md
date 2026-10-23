@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs
-description: Run a product clarification interview while durably recording important decisions, trade-offs, and domain terminology for the active RelayForge requirement.
+description: "Run a product clarification interview while durably recording important decisions, trade-offs, and domain terminology for the active RelayForge requirement."
 disable-model-invocation: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: to-spec
-description: Turn an approved or reviewable PRD and confirmed prototype decisions into a local product specification covering behavior, states, edge cases, and acceptance criteria.
+description: "Turn an approved or reviewable PRD and confirmed prototype decisions into a local product specification covering behavior, states, edge cases, and acceptance criteria."
 disable-model-invocation: true
 ---
 

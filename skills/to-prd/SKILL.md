@@ -1,6 +1,6 @@
 ---
 name: to-prd
-description: Turn clarified product decisions into a reviewable local PRD, or revise an existing RelayForge PRD. Use after the problem, users, goal, scope, and success signal are sufficiently clear.
+description: "Turn clarified product decisions into a reviewable local PRD, or revise an existing RelayForge PRD. Use after the problem, users, goal, scope, and success signal are sufficiently clear."
 disable-model-invocation: true
 ---
 

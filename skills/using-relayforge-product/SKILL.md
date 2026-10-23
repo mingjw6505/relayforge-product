@@ -1,6 +1,6 @@
 ---
 name: using-relayforge-product
-description: Route product-side requests through RelayForge Product: clarify fuzzy requirements, make UX and scope decisions, create or refine PRDs, build clickable local prototypes, write product specs, and split approved specs into local tickets. Use for natural-language product work or when the user asks to continue a RelayForge workflow.
+description: "Route product-side requests through RelayForge Product: clarify fuzzy requirements, make UX and scope decisions, create or refine PRDs, build clickable local prototypes, write product specs, and split approved specs into local tickets. Use for natural-language product work or when the user asks to continue a RelayForge workflow."
 ---
 
 # Using RelayForge Product

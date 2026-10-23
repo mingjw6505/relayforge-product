@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: Explore product ideas, user experience directions, information architecture, interaction flows, and low-to-medium fidelity prototypes before formalizing a RelayForge PRD or specification.
+description: "Explore product ideas, user experience directions, information architecture, interaction flows, and low-to-medium fidelity prototypes before formalizing a RelayForge PRD or specification."
 ---
 
 # Product brainstorming

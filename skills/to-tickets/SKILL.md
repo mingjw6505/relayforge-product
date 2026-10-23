@@ -1,6 +1,6 @@
 ---
 name: to-tickets
-description: Break a confirmed product specification into local, reviewable tracer-bullet tickets with user-visible outcomes, acceptance criteria, and blocking edges.
+description: "Break a confirmed product specification into local, reviewable tracer-bullet tickets with user-visible outcomes, acceptance criteria, and blocking edges."
 disable-model-invocation: true
 ---
 

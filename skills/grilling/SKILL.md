@@ -1,6 +1,6 @@
 ---
 name: grilling
-description: Interview the user to resolve fuzzy product requirements, user experience decisions, scope boundaries, trade-offs, and acceptance criteria for a RelayForge requirement.
+description: "Interview the user to resolve fuzzy product requirements, user experience decisions, scope boundaries, trade-offs, and acceptance criteria for a RelayForge requirement."
 ---
 
 # Grilling
