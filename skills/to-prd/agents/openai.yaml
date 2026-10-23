@@ -1,0 +1,6 @@
+interface:
+  display_name: "To PRD"
+  short_description: "Create a reviewable local product PRD"
+  default_prompt: "Use $to-prd to turn the clarified product decisions into a local PRD."
+policy:
+  allow_implicit_invocation: false

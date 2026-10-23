@@ -1,0 +1,4 @@
+interface:
+  display_name: "Using RelayForge Product"
+  short_description: "Route product work through RelayForge stages"
+  default_prompt: "Use $using-relayforge-product to route this product request to the right stage and identify the next confirmation needed."

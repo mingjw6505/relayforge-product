@@ -1,0 +1,5 @@
+interface:
+  display_name: "To Spec"
+  short_description: "Create a product behavior specification"
+policy:
+  allow_implicit_invocation: false
