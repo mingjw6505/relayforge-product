@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "relayforge-product",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Product-side workflows for clarifying requirements, shaping user experience, writing PRDs and specs, prototyping, and splitting approved work into local tickets.",
   "skills": "./skills/"
 }

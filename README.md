@@ -12,6 +12,8 @@ It deliberately stops before implementation, testing, deployment, and release.
 - `plugin.json` — portable Agent Plugins manifest.
 - `.codex-plugin/plugin.json` — Codex compatibility manifest.
 - `.claude-plugin/plugin.json` — Claude Code manifest.
+- `.agents/plugins/marketplace.json` — repo marketplace manifest for Codex/ChatGPT.
+- `.claude-plugin/marketplace.json` — legacy-compatible marketplace manifest.
 - `skills/` — reusable workflows, one directory per skill.
 - `AGENTS.md` — repository guidance for Codex contributors.
 
@@ -48,3 +50,15 @@ conventions take precedence; otherwise use `docs/relayforge/` as described in
 [`docs/relayforge/README.md`](docs/relayforge/README.md).
 
 No MCP server, hooks, credentials, or runtime dependencies are configured.
+
+## Install from this repository
+
+When adding this GitHub repository as a marketplace, use:
+
+```text
+https://github.com/mingjw6505/relayforge-product
+```
+
+The repository includes marketplace manifests that point to the root plugin
+package. If the desktop app cached the previous invalid marketplace, remove or
+refresh that marketplace and add the repository again.
