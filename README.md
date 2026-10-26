@@ -43,6 +43,7 @@ or `assets/` inside the skill directory only when the workflow needs them.
 python3 -m json.tool plugin.json >/dev/null
 python3 -m json.tool .codex-plugin/plugin.json >/dev/null
 python3 -m json.tool .claude-plugin/plugin.json >/dev/null
+node --test test/*.test.cjs
 ```
 
 Product outputs are written to the current project workspace. Existing project
@@ -50,6 +51,11 @@ conventions take precedence; otherwise use `docs/relayforge/` as described in
 [`docs/relayforge/README.md`](docs/relayforge/README.md).
 
 No MCP server, hooks, credentials, or runtime dependencies are configured.
+
+The optional browser visual companion has native Bash and PowerShell launchers.
+On Windows, use `skills/brainstorming/scripts/start-server.ps1`; it requires
+Node.js but does not require Bash or WSL. Product artifacts can always fall back
+to self-contained static HTML when the interactive companion cannot start.
 
 ## Install from this repository
 

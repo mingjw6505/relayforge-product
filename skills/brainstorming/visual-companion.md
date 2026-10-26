@@ -32,6 +32,22 @@ The server watches a directory for HTML files and serves the newest one to the b
 
 ## Starting a Session
 
+Before starting, check that `node --version` succeeds and choose the native
+launcher for the current shell. Do not try a generic `bash.exe` on Windows: it
+may be a WSL shim with no installed distribution.
+
+**PowerShell on Windows (preferred):**
+
+```powershell
+& scripts/start-server.ps1 -ProjectDir C:\path\to\project -Open
+```
+
+The PowerShell launcher starts the server as a hidden background process and
+prints the same startup JSON as the Bash launcher. Use `-Foreground` only when
+the host explicitly supplies a persistent/background terminal mechanism.
+
+**POSIX shell:**
+
 ```bash
 # Start AFTER the user approves the companion. --open auto-opens their browser on
 # the first screen; --project-dir persists mockups and enables same-port restart.
@@ -59,19 +75,30 @@ without repeating it.
 
 **Launching the server by platform:**
 
-**Claude Code:**
+On Windows/Codex or Windows/Claude Code, use `start-server.ps1`; no Bash, Git
+Bash, or WSL installation is required. On macOS and Linux, use
+`start-server.sh`. If the selected native launcher or Node.js is unavailable,
+do not spend the product session troubleshooting the environment: create the
+self-contained prototype under `docs/relayforge/prototypes/`, tell the user it
+is a static fallback, and provide its `index.html` path for local opening.
+
+**Claude Code on macOS/Linux:**
 ```bash
 # Default mode works — the script backgrounds the server itself.
 bash scripts/start-server.sh --project-dir /path/to/project --open
 ```
 
-On Windows, the script auto-detects and switches to foreground mode (which blocks the tool call). Use `run_in_background: true` on the Bash tool call so the server survives across conversation turns, then read `$STATE_DIR/server-info` on the next turn to get the URL and port.
-
-**Codex:**
+**Codex on macOS/Linux:**
 ```bash
 # Codex reaps background processes. The script auto-detects CODEX_CI and
 # switches to foreground mode. Run it normally — no extra flags needed.
 bash scripts/start-server.sh --project-dir /path/to/project --open
+```
+
+For Codex on Windows, use:
+
+```powershell
+& scripts/start-server.ps1 -ProjectDir C:\path\to\project -Open
 ```
 
 **Gemini CLI:**
@@ -81,16 +108,26 @@ bash scripts/start-server.sh --project-dir /path/to/project --open
 bash scripts/start-server.sh --project-dir /path/to/project --open --foreground
 ```
 
-**Copilot CLI:**
+**Copilot CLI on macOS/Linux:**
 ```bash
 # Start it with Copilot CLI's non-blocking/background shell mechanism so the
 # server survives across turns. Keep --foreground so the harness, not the
-# script, owns backgrounding. The launcher is a .sh, so invoke it via bash
-# (on Windows, call Git Bash's bash.exe from the PowerShell tool).
+# script, owns backgrounding.
 bash scripts/start-server.sh --project-dir /path/to/project --open --foreground
 ```
 
 **Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
+
+### Startup decision
+
+1. Run `node --version`. If it fails, use the static HTML fallback.
+2. On Windows PowerShell, verify `start-server.ps1` exists and use it.
+3. On a POSIX shell, verify `bash` and `start-server.sh` exist and use them.
+4. Treat startup as successful only after valid `server-started` JSON is
+   returned and its `server-info` file exists.
+5. If startup fails once for an environment reason, report the short cause and
+   use the static fallback. Do not block requirement discovery on companion
+   infrastructure.
 
 If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
 
@@ -286,6 +323,14 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 - Server serves newest file by modification time
 
 ## Cleaning Up
+
+PowerShell on Windows:
+
+```powershell
+& scripts/stop-server.ps1 -SessionDir C:\path\to\session
+```
+
+POSIX shell:
 
 ```bash
 bash scripts/stop-server.sh $SESSION_DIR

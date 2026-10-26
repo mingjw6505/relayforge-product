@@ -49,9 +49,16 @@ The prototype should be self-contained, use no external CDN or online fonts,
 show the core flow and relevant empty/loading/error states, and label unresolved
 designs as `待确认`. It is for product discussion, not production delivery.
 
+Its README must include artifact version and status plus relative links to the
+active workflow state, PRD, specification, and decision record when those files
+exist. Add the prototype directory and its deterministic SHA-256 fingerprint to
+the state artifact register.
+
 ## Handoff
 
 Report the user, problem, proposed direction, key screens and states, confirmed
 decisions, `待确认假设`, open questions, and recommended next stage. Ask for
 confirmation before handing a product boundary to `to-prd` or before treating
-prototype interactions as confirmed.
+prototype interactions as confirmed. Name the prototype version and key
+interaction scope in the confirmation phrase, and record valid approval using
+the shared workflow contract.

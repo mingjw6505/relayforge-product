@@ -11,11 +11,17 @@ clarification skill, not an implementation interview.
 
 ## Method
 
-Map the work as a decision tree. In each round, ask the whole current frontier:
-questions whose prerequisites are already settled. Number the questions, give a
-recommended answer, and wait for the user's response before expanding the next
-frontier. Never ask the user for facts that can be read from the current
-workspace.
+First apply the controller's readiness checklist. If the user has already
+provided problem, user, goal, scope, non-goals, and success signal and requests
+a PRD, use the controller fast path instead of forcing an interview.
+
+Otherwise map the work as a decision tree. In each round, ask the whole current
+frontier: questions whose prerequisites are already settled. Number the
+questions, give a recommended answer, and wait for the user's response before
+expanding the next frontier. Never ask the user for facts that can be read from
+the current workspace. “Wait for a response” applies only when material
+questions remain; it does not require a ceremonial round after the frontier is
+already empty.
 
 Cover, as relevant:
 
@@ -29,5 +35,7 @@ Cover, as relevant:
 
 Play back settled decisions in plain language. Mark your own calls as calls and
 the user's decisions as confirmed. When the frontier is empty, summarize the
-design tree and ask for explicit confirmation before handing off to PRD,
-prototype, or spec work.
+design tree and ask for an artifact-specific confirmation before handing off to
+PRD, prototype, or spec work. Use the confirmation binding rules in the shared
+workflow contract; do not interpret an ambiguous generic confirmation as
+approval.

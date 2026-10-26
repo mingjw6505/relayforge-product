@@ -37,12 +37,18 @@ docs/relayforge/specs/YYYY-MM-DD-<requirement-slug>.md
 10. `待确认假设`
 11. Confirmation status and next step
 
+Include artifact version and status plus relative links to the active workflow
+state, PRD, prototype, and decision record when present. After writing, compute
+the specification SHA-256 and add it to the state artifact register.
+
 Describe externally observable product behavior. Do not introduce technical
 architecture, APIs, schemas, or file paths unless the user explicitly asks for
 those product constraints.
 
 ## Handoff
 
-Ask the user to confirm the behavior and acceptance criteria. Keep the spec in
-`ready-for-review` until explicit confirmation; only then may it become
-`approved` and unblock `to-tickets`.
+Ask the user to confirm the behavior and acceptance criteria with a phrase that
+names the specification version and scope. Keep the spec in `ready-for-review`
+until a valid bound confirmation is written to the state approval log; only
+then may it become `approved` and unblock `to-tickets`. An ambiguous generic
+confirmation never advances this gate.

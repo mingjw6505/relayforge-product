@@ -41,10 +41,14 @@ Each ticket includes:
 - in scope;
 - out of scope;
 - linked PRD and specification;
+- linked workflow state and prototype or decision record when present;
 - unresolved questions.
 
-The index records the dependency order, total tickets, and the confirmation
-status of the breakdown.
+The index records artifact version, dependency order, total tickets, and the
+confirmation status of the breakdown. Add the ticket directory and its
+deterministic SHA-256 fingerprint to the state artifact register.
 
-After the user approves the breakdown, update the tickets to `approved` and
-the requirement state. Never infer approval from silence.
+Ask for confirmation with a phrase that names the ticket-set version and the
+granularity/dependency scope. After a valid bound approval, update the tickets
+to `approved`, add the approval-log row, and update the requirement state.
+Never infer approval from silence or an ambiguous generic response.

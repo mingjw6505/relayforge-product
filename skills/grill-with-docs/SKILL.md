@@ -22,3 +22,7 @@ state the decision, context, options considered, chosen option, and consequence.
 Glossary entries should state the term, meaning, and any ambiguity. Update
 `state.md` with confirmed decisions, `待确认假设`, open questions, blockers, and
 the next confirmation checkpoint.
+
+Link decision and glossary documents back to `state.md` and link them from the
+next PRD, prototype README, or specification that uses them. Confirmation of a
+decision record follows the controller's artifact/version binding rules.
