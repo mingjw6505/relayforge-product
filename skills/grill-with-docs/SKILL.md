@@ -6,7 +6,8 @@ disable-model-invocation: true
 
 # Grill with docs
 
-Use the `grilling` interview method for the active requirement, while recording
+Read the [workflow contract](../using-relayforge-product/references/workflow-contract.md)
+and use the `grilling` interview method for the active requirement, while recording
 durable product decisions in the requirement workflow directory.
 
 Before starting, resolve the requirement slug and read its state. Write only
@@ -26,3 +27,6 @@ the next confirmation checkpoint.
 Link decision and glossary documents back to `state.md` and link them from the
 next PRD, prototype README, or specification that uses them. Confirmation of a
 decision record follows the controller's artifact/version binding rules.
+Register meaningful decision records with stable IDs (kind `decision`), and
+include these IDs in dependent artifact inputs. In fast mode, defer intermediate
+approval and carry unconfirmed decisions into the spec as labeled assumptions.

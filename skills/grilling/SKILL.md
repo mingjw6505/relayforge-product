@@ -13,7 +13,11 @@ clarification skill, not an implementation interview.
 
 First apply the controller's readiness checklist. If the user has already
 provided problem, user, goal, scope, non-goals, and success signal and requests
-a PRD, use the controller fast path instead of forcing an interview.
+a PRD, use the controller PRD shortcut instead of forcing an interview. Read
+the [workflow contract](../using-relayforge-product/references/workflow-contract.md)
+and persisted mode. In fast mode, ask only about material conflicts or decisions
+that cannot reasonably be assumed; record the rest as `待确认假设` and continue
+the draft sequence without intermediate confirmation pauses.
 
 Otherwise map the work as a decision tree. In each round, ask the whole current
 frontier: questions whose prerequisites are already settled. Number the

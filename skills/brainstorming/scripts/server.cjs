@@ -102,6 +102,7 @@ const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'loc
 const SESSION_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
+const SERVER_ID = process.argv.find(arg => arg.startsWith('--brainstorm-server-id='))?.split('=')[1] || crypto.randomBytes(24).toString('hex');
 const RELAYFORGE_VERSION = readRelayForgeVersion();
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
@@ -200,7 +201,7 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 function readRelayForgeVersion() {
   const root = path.join(__dirname, '../../..');
   const manifests = [
-    path.join(root, 'package.json'),
+    path.join(root, 'plugin.json'),
     path.join(root, '.codex-plugin/plugin.json')
   ];
 
@@ -228,7 +229,7 @@ function brandMarkup() {
   const version = escapeHtmlText(RELAYFORGE_VERSION);
   const text = 'RelayForge v' + version;
 
-  return '<div class="brand"><a href="https://github.com/mingjw6505/relayforge"><span class="brand-copy">' + text + '</span></a></div>';
+  return '<div class="brand"><a href="https://github.com/mingjw6505/relayforge-product"><span class="brand-copy">' + text + '</span></a></div>';
 }
 
 function renderBranding(html) {
@@ -380,7 +381,19 @@ function handleRequest(req, res) {
 
   const pathname = pathnameOf(req.url);
   const keyFromQuery = queryKey(req.url);
-  if (req.method === 'GET' && pathname === '/' && keyFromQuery && timingSafeEqualStr(keyFromQuery, TOKEN)) {
+  if (req.method === 'GET' && pathname === '/session') {
+    res.writeHead(200, securityHeaders({ 'Content-Type': 'application/json' }));
+    res.end(JSON.stringify({ server_id: SERVER_ID, pid: process.pid, session_dir: path.resolve(SESSION_DIR) }));
+  } else if (req.method === 'POST' && pathname === '/shutdown') {
+    if (!timingSafeEqualStr(req.headers['x-brainstorm-instance'] || '', SERVER_ID)) {
+      res.writeHead(409, securityHeaders());
+      res.end('Session instance mismatch');
+      return;
+    }
+    res.once('finish', () => requestShutdown('stop-server'));
+    res.writeHead(200, securityHeaders({ 'Content-Type': 'application/json' }));
+    res.end(JSON.stringify({ status: 'stopping' }));
+  } else if (req.method === 'GET' && pathname === '/' && keyFromQuery && timingSafeEqualStr(keyFromQuery, TOKEN)) {
     res.writeHead(200, securityHeaders({ 'Content-Type': 'text/html; charset=utf-8' }));
     res.end(bootstrapPage(keyFromQuery));
   } else if (req.method === 'GET' && pathname === '/') {
@@ -388,6 +401,8 @@ function handleRequest(req, res) {
     let html = screenFile
       ? (raw => isFullDocument(raw) ? raw : wrapInFrame(raw))(fs.readFileSync(screenFile, 'utf-8'))
       : waitingPage();
+    const screenMeta = '<meta name="brainstorm-screen" content="' + escapeHtmlText(screenFile ? path.basename(screenFile) : '') + '">';
+    html = html.includes('</head>') ? html.replace('</head>', screenMeta + '\n</head>') : screenMeta + html;
 
     if (html.includes('</body>')) {
       html = html.replace('</body>', helperInjection + '\n</body>');
@@ -488,9 +503,16 @@ function handleMessage(text) {
     console.error('Failed to parse WebSocket message:', e.message);
     return;
   }
+  if (!event || typeof event !== 'object' || Array.isArray(event)) return;
+  if (event.type === 'choice' && event.choice === undefined) event.choice = event.value;
+  const currentScreen = getNewestScreen();
+  const screen = currentScreen ? path.basename(currentScreen) : null;
+  // A disconnected old screen can deliver queued clicks after a new screen loads.
+  if (event.screen && event.screen !== screen) return;
+  event.screen = screen;
   touchActivity();
-  console.log(JSON.stringify({ source: 'user-event', ...event }));
-  if (event && event.choice) {
+  console.log(JSON.stringify({ ...event, source: 'user-event' }));
+  if (event.choice !== undefined && event.choice !== null) {
     const eventsFile = path.join(STATE_DIR, 'events');
     fs.appendFileSync(eventsFile, JSON.stringify(event) + '\n');
   }
@@ -550,6 +572,7 @@ function touchActivity() {
 // ========== File Watching ==========
 
 const debounceTimers = new Map();
+let requestShutdown = () => {};
 
 // ========== Server Startup ==========
 
@@ -594,6 +617,8 @@ function startServer() {
   watcher.on('error', (err) => console.error('fs.watch error:', err.message));
 
   function shutdown(reason) {
+    if (shutdown.started) return;
+    shutdown.started = true;
     console.log(JSON.stringify({ type: 'server-stopped', reason }));
     const infoFile = path.join(STATE_DIR, 'server-info');
     if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
@@ -602,6 +627,7 @@ function startServer() {
       JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
     );
     watcher.close();
+    for (const timer of debounceTimers.values()) clearTimeout(timer);
     clearInterval(lifecycleCheck);
     // Close any upgraded WebSocket sockets so server.close() can complete and
     // the process actually exits instead of lingering on an open connection.
@@ -609,7 +635,11 @@ function startServer() {
       try { socket.destroy(); } catch (e) { /* already gone */ }
     }
     server.close(() => process.exit(0));
+    server.closeIdleConnections?.();
   }
+  requestShutdown = shutdown;
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+  process.once('SIGINT', () => shutdown('SIGINT'));
 
   function ownerAlive() {
     if (!ownerPid) return true;
@@ -645,11 +675,9 @@ function startServer() {
     // one after an EADDRINUSE fallback) so it can't collide with another server's
     // cookie in the shared localhost jar.
     COOKIE_NAME = 'brainstorm-key-' + PORT;
-    // Record the bound port AND token so the next restart of this session reuses
-    // them — but ONLY when we got our preferred port. On a fallback we bound a
-    // *different* port because someone else holds the preferred one; persisting
-    // would overwrite the shared files and strand that other session's open tab.
-    if (PORT_FILE && !triedFallback) {
+    // Port/token files belong to this session, including fallback connections.
+    // Updating them cannot strand another session's browser tab.
+    if (PORT_FILE) {
       try { fs.writeFileSync(PORT_FILE, String(PORT)); } catch (e) { /* best effort */ }
       if (TOKEN_FILE) {
         try {
@@ -660,12 +688,15 @@ function startServer() {
     }
     const info = JSON.stringify({
       type: 'server-started', port: Number(PORT), host: HOST,
+      server_id: SERVER_ID, pid: process.pid, session_dir: path.resolve(SESSION_DIR),
       url_host: URL_HOST, url: companionUrl(),
       screen_dir: CONTENT_DIR, state_dir: STATE_DIR, idle_timeout_ms: IDLE_TIMEOUT_MS
     });
-    console.log(info);
+    fs.rmSync(path.join(STATE_DIR, 'server-stopped'), { force: true });
     // server-info embeds the key — keep it owner-only.
     fs.writeFileSync(path.join(STATE_DIR, 'server-info'), info + '\n', { mode: 0o600 });
+    console.log(info);
+    if (getNewestScreen()) maybeOpenBrowser();
   }
 
   server.on('error', (err) => {

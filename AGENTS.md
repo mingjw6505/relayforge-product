@@ -6,7 +6,7 @@
 - Keep Codex compatibility metadata in `.codex-plugin/plugin.json` and Claude Code metadata in `.claude-plugin/plugin.json` aligned with the root manifest.
 - Put reusable workflows in `skills/<skill-name>/SKILL.md` with YAML front matter containing `name` and `description`.
 - Keep skill descriptions specific enough to define activation boundaries; do not put unrelated workflows in one skill.
-- Keep RelayForge Product product-side only: requirements, UX decisions, PRDs, prototypes, specs, and local ticket breakdowns. Do not add coding, testing, deployment, or release workflows to this plugin.
+- Keep RelayForge Product product-side only: requirements, UX decisions, PRDs, prototypes, and specs. Product work ends at specification approval; downstream development planning belongs to a separate workflow. Do not add coding, testing, deployment, or release workflows to this plugin.
 - Prefer existing project documentation conventions; otherwise use `docs/relayforge/` and its documented artifact layout.
 - Treat `using-relayforge-product` as the workflow controller and keep specialist skills focused on one product stage.
 - Before every commit whose target branch is `main`, increment the patch component of the plugin version by 1 (for example, `0.1.0` → `0.1.1`). Treat the root `plugin.json` as the source of truth, then update the `version` field in `.codex-plugin/plugin.json` and `.claude-plugin/plugin.json` to the same value.
@@ -43,3 +43,14 @@ Also verify that every skill front matter and UI metadata file is valid YAML:
 ```bash
 ruby -e 'require "yaml"; Dir["skills/*/SKILL.md", "skills/*/agents/openai.yaml"].each { |path| text = File.read(path); text = text.split(/^---\s*$/)[1] if path.end_with?("SKILL.md"); YAML.safe_load(text) }'
 ```
+
+The unified contributor check is cross-platform (use `python3` where needed):
+
+```text
+python scripts/check.py
+```
+
+This additionally validates the pinned portable schema, native Codex/Claude
+marketplace shapes, aligned metadata, Markdown structure/links, helper syntax,
+and regression behavior. `--structure-only` skips executable helper tests.
+It uses installed PyYAML or Ruby for YAML and adds no plugin runtime dependencies.

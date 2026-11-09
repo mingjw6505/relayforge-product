@@ -1,20 +1,13 @@
 {
-  "$schema": "https://agent-plugins.org/schemas/marketplace.schema.json",
   "name": "relayforge-product-marketplace",
-  "interface": {
-    "displayName": "RelayForge Product"
+  "owner": {
+    "name": "RelayForge"
   },
+  "description": "Product-side requirements, UX, PRDs, prototypes, and approved specifications.",
   "plugins": [
     {
       "name": "relayforge-product",
-      "source": {
-        "source": "local",
-        "path": "./"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
+      "source": "./",
       "category": "Productivity"
     }
   ]

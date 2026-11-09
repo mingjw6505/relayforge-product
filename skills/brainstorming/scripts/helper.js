@@ -118,6 +118,7 @@
   }
 
   function sendEvent(event) {
+    event.screen = document.querySelector('meta[name="brainstorm-screen"]')?.content || null;
     event.timestamp = Date.now();
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(event));
@@ -160,7 +161,7 @@
   // Expose API for explicit use
   window.brainstorm = {
     send: sendEvent,
-    choice: (value, metadata = {}) => sendEvent({ type: 'choice', value, ...metadata })
+    choice: (value, metadata = {}) => sendEvent({ ...metadata, type: 'choice', choice: value })
   };
 
   connect();

@@ -11,6 +11,9 @@ prototype—not production code.
 
 ## Start with the concrete moment
 
+Read the active requirement's mode and the
+[workflow contract](../using-relayforge-product/references/workflow-contract.md).
+
 If the request is materially incomplete, ask one open question about the real
 moment, user, or desired outcome. If the user explicitly asks to skip
 questions, state the important assumptions and continue in a reviewable state.
@@ -52,7 +55,8 @@ designs as `待确认`. It is for product discussion, not production delivery.
 Its README must include artifact version and status plus relative links to the
 active workflow state, PRD, specification, and decision record when those files
 exist. Add the prototype directory and its deterministic SHA-256 fingerprint to
-the state artifact register.
+the state artifact register using the controller helper, with the PRD and any
+decision records actually used as input snapshots.
 
 ## Handoff
 
@@ -62,3 +66,9 @@ confirmation before handing a product boundary to `to-prd` or before treating
 prototype interactions as confirmed. Name the prototype version and key
 interaction scope in the confirmation phrase, and record valid approval using
 the shared workflow contract.
+
+In explicit fast mode, defer intermediate boundary/prototype approval and
+continue to PRD or spec drafts, retaining labeled assumptions. The final spec
+confirmation must explicitly cover the referenced core interactions. An
+interactive companion still needs user acceptance; use a static prototype
+when appropriate to keep the requested draft sequence moving.

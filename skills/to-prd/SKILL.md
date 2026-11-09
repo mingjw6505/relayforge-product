@@ -12,13 +12,16 @@ publish to an issue tracker.
 
 ## Before writing
 
+Follow the [workflow contract](../using-relayforge-product/references/workflow-contract.md)
+and resolve the requirement through the controller, including persisted mode.
+
 Read the active requirement state and existing project documentation. If the
 problem, users, product goal, scope, or success signal is materially unclear,
-stop and route to `grilling`. If the user explicitly requests a draft anyway,
+stop and route to `grilling`. In fast mode, or if the user requests a draft anyway,
 write the missing decisions under `待确认假设` and keep the artifact in
 `ready-for-review`, never `approved`.
 
-If the input covers every item in the PRD fast-path checklist, create the PRD in
+If the input covers every item in the PRD shortcut checklist, create the PRD in
 the same turn after a compact structured playback. Do not route to `grilling`
 solely to obtain another response. Treat non-blocking gaps as `待确认假设`.
 
@@ -28,8 +31,8 @@ Use an existing project convention when one exists. Otherwise write:
 docs/relayforge/prd/YYYY-MM-DD-<requirement-slug>.md
 ```
 
-Update the associated PRD on iteration unless the user explicitly asks for a
-new version.
+Update the associated PRD file on iteration; increment its visible version for
+revisions. Create a separate file copy only when the user asks to preserve one.
 
 ## Required PRD sections
 
@@ -47,7 +50,9 @@ new version.
 
 Include `Artifact version` (starting at `v1`), `Status`, and links to the active
 workflow state and any related prototype or decision record. After writing,
-compute its SHA-256 and add it to the state artifact register.
+register it with its upstream decision/boundary IDs using the controller helper.
+On revision, refresh upstream records first; let registration update the visible
+version and invalidate dependent outputs. Do not reuse their old approvals.
 
 Use the user's language. Do not invent metrics, policies, or commitments; mark
 missing information explicitly.
@@ -60,3 +65,7 @@ scope with a phrase that names the artifact and version, such as `确认 PRD v1
 decisions, assumptions, blockers, and recommended next step. Only a valid bound
 confirmation recorded in the state approval log may change the PRD status to
 `approved`.
+
+In fast mode, defer this intermediate confirmation and continue to the relevant
+prototype and specification drafts. Keep the PRD `ready-for-review`; the final
+spec confirmation explicitly covers its referenced PRD goal and scope.

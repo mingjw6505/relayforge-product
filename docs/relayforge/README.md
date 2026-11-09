@@ -10,18 +10,41 @@ docs/relayforge/
 ├── prd/
 ├── prototypes/
 ├── specs/
-├── tickets/
 └── workflows/<requirement-slug>/
     ├── state.md
     ├── decisions.md       # optional
     └── glossary.md        # optional
 ```
 
+## Modes and state dependencies
+
+New requirements default to `Workflow mode: standard`; an explicit quick-mode
+request records `fast`. Resume retains the mode. Fast mode produces PRD,
+relevant prototype and specification drafts continuously and stops for one
+spec confirmation covering its referenced goal, scope, core interactions,
+behavior and acceptance criteria. It does not automatically approve the source
+PRD or prototype. Specification approval completes the product workflow in
+both modes; downstream development planning belongs to a separate workflow.
+
+Artifact records live in a fenced JSON section in state.md, with generated
+Produced files and Approval log tables. Every output records upstream artifact
+IDs, versions and SHA-256 fingerprints. Changes invalidate all affected
+approvals transitively. The helper's `check`, `register`, `approve`, `gate` and
+`mode` commands maintain these records; see the
+[command reference](../../skills/using-relayforge-product/references/state-commands.md).
+Existing table-only states need migration preserving provenance; unverifiable
+approvals become stale rather than being silently adopted.
+
+With an existing project documentation convention, pass `--docs-dir` to `init`
+and use that root consistently for state and outputs. The directory must remain
+inside the project. Do not create a parallel default documentation tree.
+
 ## Naming and lifecycle
 
 Use `YYYY-MM-DD-<requirement-slug>` for top-level artifact names. During an
 iteration, update the associated artifact instead of creating a copy. Create a
-new version only when the user explicitly asks to preserve history.
+new file copy only when the user explicitly asks to preserve history. Increment
+the visible artifact version whenever content or its input baseline changes.
 
 Artifacts use these statuses:
 
@@ -48,13 +71,14 @@ node <skill-dir>/scripts/workflow-state.cjs init --project-dir <project-root> --
 Each reviewable artifact starts at `v1`, links to its workflow state and related
 artifacts, and is registered in `state.md` with a SHA-256 fingerprint. Approval
 records bind artifact path, version, fingerprint, scope, time, and approver. A
-content change invalidates the prior approval and returns the artifact to
-`ready-for-review`.
+content or input change invalidates the prior approval and all transitive
+dependants, returning them to `ready-for-review`. Check state before relying on
+an older artifact's embedded status label.
 
 The workflow is intentionally product-side only:
 
 ```text
-idea or fuzzy request → clarification → PRD → prototype → spec → tickets
+idea or fuzzy request → clarification → PRD → prototype → spec → approved handoff
 ```
 
 Do not mark an output `approved` until the user confirms it. If the user asks to

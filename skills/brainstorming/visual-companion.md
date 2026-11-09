@@ -1,344 +1,140 @@
-# Visual Companion Guide
+# Visual companion
 
-Browser-based visual brainstorming companion for showing mockups, diagrams, and options.
+Use the companion for product layouts, user journeys, screen states and visual
+comparisons when seeing the alternatives helps the user decide. Keep textual
+scope and trade-off questions in chat. It is an optional discussion aid, not a
+prerequisite for PRDs or specs. Keep architecture and implementation design
+outside this product plugin.
 
-## When to Use
+## Start or resume
 
-Decide per-question, not per-session. The test: **would the user understand this better by seeing it than reading it?**
+Use the native launcher after the user accepts the companion. Node.js 18 or
+later is required for the companion. Windows supports Windows PowerShell 5.1
+and PowerShell 7, with no Bash, WSL, CIM access or extra packages required.
+Resolve script paths relative to this skill's directory.
 
-**Use the browser** when the content itself is visual:
-
-- **UI mockups** — wireframes, layouts, navigation structures, component designs
-- **Architecture diagrams** — system components, data flow, relationship maps
-- **Side-by-side visual comparisons** — comparing two layouts, two color schemes, two design directions
-- **Design polish** — when the question is about look and feel, spacing, visual hierarchy
-- **Spatial relationships** — state machines, flowcharts, entity relationships rendered as diagrams
-
-**Use the terminal** when the content is text or tabular:
-
-- **Requirements and scope questions** — "what does X mean?", "which features are in scope?"
-- **Conceptual A/B/C choices** — picking between approaches described in words
-- **Tradeoff lists** — pros/cons, comparison tables
-- **Technical decisions** — API design, data modeling, architectural approach selection
-- **Clarifying questions** — anything where the answer is words, not a visual preference
-
-A question *about* a UI topic is not automatically a visual question. "What kind of wizard do you want?" is conceptual — use the terminal. "Which of these wizard layouts feels right?" is visual — use the browser.
-
-## How It Works
-
-The server watches a directory for HTML files and serves the newest one to the browser. You write HTML content to `screen_dir`, the user sees it in their browser and can click to select options. Selections are recorded to `state_dir/events` that you read on your next turn.
-
-**Content fragments vs full documents:** If your HTML file starts with `<!DOCTYPE` or `<html`, the server serves it as-is (just injects the helper script). Otherwise, the server automatically wraps your content in the frame template — adding the header, CSS theme, connection status, and all interactive infrastructure. **Write content fragments by default.** Only write full documents when you need complete control over the page.
-
-## Starting a Session
-
-Before starting, check that `node --version` succeeds and choose the native
-launcher for the current shell. Do not try a generic `bash.exe` on Windows: it
-may be a WSL shim with no installed distribution.
-
-**PowerShell on Windows (preferred):**
+PowerShell:
 
 ```powershell
 & scripts/start-server.ps1 -ProjectDir C:\path\to\project -Open
 ```
 
-The PowerShell launcher starts the server as a hidden background process and
-prints the same startup JSON as the Bash launcher. Use `-Foreground` only when
-the host explicitly supplies a persistent/background terminal mechanism.
-
-**POSIX shell:**
+POSIX:
 
 ```bash
-# Start AFTER the user approves the companion. --open auto-opens their browser on
-# the first screen; --project-dir persists mockups and enables same-port restart.
-bash scripts/start-server.sh --project-dir /path/to/project --open
-
-# Returns: {"type":"server-started","port":52341,
-#           "url":"http://localhost:52341/?key=ab12…",
-#           "screen_dir":"/path/to/project/.relayforge/brainstorm/12345-1706000000/content",
-#           "state_dir":"/path/to/project/.relayforge/brainstorm/12345-1706000000/state"}
-```
-
-Save `screen_dir` and `state_dir` from the response. With `--open`, the browser opens itself when you push the first screen — you don't need to ask the user to open it, but still share the URL as a fallback (headless/remote setups won't auto-open).
-
-**The URL contains a session key (`?key=…`).** The server rejects any request
-without it, so always give the user the **complete** URL from the `url` field —
-never strip the query string, and never hand out a bare `http://host:port`. The
-key gates HTTP and WebSocket access so a stray browser tab or another machine on
-the network can't read the screens or inject events. After the first load the
-browser remembers the key via a cookie, so reloads and `/files/*` assets work
-without repeating it.
-
-**Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.relayforge/brainstorm/` for the session directory.
-
-**Note:** Pass the project root as `--project-dir` so mockups persist in `.relayforge/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.relayforge/` to `.gitignore` if it's not already there.
-
-**Launching the server by platform:**
-
-On Windows/Codex or Windows/Claude Code, use `start-server.ps1`; no Bash, Git
-Bash, or WSL installation is required. On macOS and Linux, use
-`start-server.sh`. If the selected native launcher or Node.js is unavailable,
-do not spend the product session troubleshooting the environment: create the
-self-contained prototype under `docs/relayforge/prototypes/`, tell the user it
-is a static fallback, and provide its `index.html` path for local opening.
-
-**Claude Code on macOS/Linux:**
-```bash
-# Default mode works — the script backgrounds the server itself.
 bash scripts/start-server.sh --project-dir /path/to/project --open
 ```
 
-**Codex on macOS/Linux:**
-```bash
-# Codex reaps background processes. The script auto-detects CODEX_CI and
-# switches to foreground mode. Run it normally — no extra flags needed.
-bash scripts/start-server.sh --project-dir /path/to/project --open
-```
+The launchers share `scripts/companion.cjs`. The response is `server-started`
+JSON containing `url`, `screen_dir`, `state_dir`, `session_dir`, `pid` and
+`server_id`. Starting an already running session returns the same information
+with `reused: true`. Treat startup as successful only after valid JSON returns.
 
-For Codex on Windows, use:
+Pass the project root to persist screens under `.relayforge/brainstorm/`.
+The default resumes that project's active session, including its existing
+screens and events. `.active-session` records the session directory name; a
+legacy project without a pointer resumes its most recent legacy session.
+Connection port and key are persisted per session, so independent sessions do
+not overwrite each other's connection files. If the preferred port is busy,
+use the newly returned URL; the old tab cannot reconnect to a different port.
 
-```powershell
-& scripts/start-server.ps1 -ProjectDir C:\path\to\project -Open
-```
+To restore a specific session, pass `-SessionDir <session>` or
+`--session-dir <session>` instead. To deliberately start a separate session,
+pass `-NewSession` or `--new-session`. Without a project, the launcher creates a
+temporary session; it is retained on stop for review and can be removed later.
+Keep `.relayforge/` out of version control, since connection files contain keys.
 
-**Gemini CLI:**
-```bash
-# Use --foreground and set is_background: true on your shell tool call
-# so the process survives across turns
-bash scripts/start-server.sh --project-dir /path/to/project --open --foreground
-```
+The URL contains `?key=…`; always share the complete returned URL. The initial
+load stores the key in a cookie and session storage, then removes it from the
+visible URL. HTTP and WebSocket access both require the key. Do not expose
+keys in durable product artifacts.
 
-**Copilot CLI on macOS/Linux:**
-```bash
-# Start it with Copilot CLI's non-blocking/background shell mechanism so the
-# server survives across turns. Keep --foreground so the harness, not the
-# script, owns backgrounding.
-bash scripts/start-server.sh --project-dir /path/to/project --open --foreground
-```
+The browser opens automatically after a screen is available when `-Open` or
+`--open` is set. Also share the URL for environments without a desktop browser.
+For remote/container setups, use `--host 0.0.0.0 --url-host <reachable-host>`
+(or PowerShell `-BindHost` / `-UrlHost`) only when the environment requires it.
 
-**Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
+On POSIX hosts that reap detached processes, use the host's persistent terminal
+mechanism with `--foreground`. `CODEX_CI` selects foreground automatically;
+`--background` explicitly overrides it. On Windows the default is hidden
+background launch; `-Foreground` is only for a persistent terminal.
 
-### Startup decision
+If Node or the selected launcher is unavailable, or startup fails for an
+environment reason, report the short cause and create a self-contained static
+prototype under the project's prototype directory. Do not spend the product
+session troubleshooting companion infrastructure.
 
-1. Run `node --version`. If it fails, use the static HTML fallback.
-2. On Windows PowerShell, verify `start-server.ps1` exists and use it.
-3. On a POSIX shell, verify `bash` and `start-server.sh` exist and use them.
-4. Treat startup as successful only after valid `server-started` JSON is
-   returned and its `server-info` file exists.
-5. If startup fails once for an environment reason, report the short cause and
-   use the static fallback. Do not block requirement discovery on companion
-   infrastructure.
+## Discuss screens
 
-If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
+1. Resume through the launcher to verify the server is alive; existing marker
+   files alone do not prove liveness. Shutdown is recorded in
+   `state/server-stopped`, which is cleared after a successful restart.
+2. Write a fresh semantic HTML filename to `screen_dir`, such as `layout.html`
+   and `layout-v2.html`. The newest file is served and changes trigger reloads.
+3. Explain the decision the user is making, then wait for their feedback.
+4. Before writing the next screen, read `state_dir/events`. The current screen's
+   events reset on a new screen; chat feedback remains the primary input.
+5. Record settled product decisions in workflow state; browser clicks alone
+   never approve a PRD, prototype or spec. In fast mode defer intermediate
+   approvals as directed by the controller.
 
-```bash
-bash scripts/start-server.sh \
-  --project-dir /path/to/project \
-  --host 0.0.0.0 \
-  --url-host localhost
-```
-
-Use `--url-host` to control what hostname is printed in the returned URL JSON.
-
-## The Loop
-
-1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
-   - **Required: confirm the server is alive before referring to the URL or pushing a screen.** Check that `$STATE_DIR/server-info` exists and `$STATE_DIR/server-stopped` does not. If it has shut down, restart it with `start-server.sh` using the **same `--project-dir`** — it reuses the same port, so the user's open tab reconnects on its own (it shows a "paused" overlay while the server is down) and you don't need to send a new URL. The server auto-exits after 4 hours idle (configurable with `--idle-timeout-minutes`).
-   - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
-   - **Never reuse filenames** — each screen gets a fresh file
-   - Use your file-creation tool — **never use cat/heredoc** (dumps noise into terminal)
-   - Server automatically serves the newest file
-
-2. **Tell user what to expect and end your turn:**
-   - Remind them of the URL (every step, not just first)
-   - Give a brief text summary of what's on screen (e.g., "Showing 3 layout options for the homepage")
-   - Ask them to respond in the terminal: "Take a look and let me know what you think. Click to select an option if you'd like."
-
-3. **On your next turn** — after the user responds in the terminal:
-   - Read `$STATE_DIR/events` if it exists — this contains the user's browser interactions (clicks, selections) as JSON lines
-   - Merge with the user's terminal text to get the full picture
-   - The terminal message is the primary feedback; `state_dir/events` provides structured interaction data
-
-4. **Iterate or advance** — if feedback changes current screen, write a new file (e.g., `layout-v2.html`). Only move to the next question when the current step is validated.
-
-5. **Unload when returning to terminal** — when the next step doesn't need the browser (e.g., a clarifying question, a tradeoff discussion), push a waiting screen to clear the stale content:
-
-   ```html
-   <!-- filename: waiting.html (or waiting-2.html, etc.) -->
-   <div style="display:flex;align-items:center;justify-content:center;min-height:60vh">
-     <p class="subtitle">Continuing in terminal...</p>
-   </div>
-   ```
-
-   This prevents the user from staring at a resolved choice while the conversation has moved on. When the next visual question comes up, push a new content file as usual.
-
-6. Repeat until done.
-
-## Writing Content Fragments
-
-Write just the content that goes inside the page. The server wraps it in the frame template automatically (header, theme CSS, connection status, and all interactive infrastructure).
-
-**Minimal example:**
+Write HTML fragments by default; the server wraps them with a light/dark frame,
+connection status and interaction helpers. Full documents beginning with
+`<!DOCTYPE` or `<html` are served with the helper injected. Use self-contained
+assets with no external CDN, fonts or remote images. Companion assets are
+available as `/files/<filename>` from the content directory.
 
 ```html
-<h2>Which layout works better?</h2>
-<p class="subtitle">Consider readability and visual hierarchy</p>
-
+<h2>Which layout supports the primary task?</h2>
 <div class="options">
-  <div class="option" data-choice="a" onclick="toggleSelect(this)">
-    <div class="letter">A</div>
-    <div class="content">
-      <h3>Single Column</h3>
-      <p>Clean, focused reading experience</p>
-    </div>
-  </div>
-  <div class="option" data-choice="b" onclick="toggleSelect(this)">
-    <div class="letter">B</div>
-    <div class="content">
-      <h3>Two Column</h3>
-      <p>Sidebar navigation with main content</p>
-    </div>
-  </div>
+  <button class="option" data-choice="single" onclick="toggleSelect(this)">
+    <span class="letter">A</span><span class="content">Single column</span>
+  </button>
+  <button class="option" data-choice="split" onclick="toggleSelect(this)">
+    <span class="letter">B</span><span class="content">Split view</span>
+  </button>
 </div>
 ```
 
-That's it. No `<html>`, no CSS, no `<script>` tags needed. The server provides all of that.
+Frame classes include `.options`, `.option`, `.cards`, `.card`, `.mockup`,
+`.mockup-header`, `.mockup-body`, `.split`, `.subtitle`, `.section`, `.label`,
+`.mock-nav`, `.mock-sidebar`, `.mock-content`, `.mock-button`, `.mock-input`
+and `.placeholder`. See [the frame](scripts/frame-template.html) for styling.
+Add `data-multiselect` to an options/cards container for selection toggles.
+The event stream records click history; use chat to resolve ambiguous final
+multi-selections instead of assuming the last click represents the whole set.
 
-## CSS Classes Available
+## Events
 
-The frame template provides these CSS classes for your content:
+Clicks on `data-choice` elements persist automatically. Custom controls can
+call `brainstorm.choice(value, metadata)`; the canonical field is `choice`.
+The server also accepts the old `type: choice, value: …` format. Values such as
+`0` and `false` are valid choices. Both formats persist to the same JSONL file.
 
-### Options (A/B/C choices)
-
-```html
-<div class="options">
-  <div class="option" data-choice="a" onclick="toggleSelect(this)">
-    <div class="letter">A</div>
-    <div class="content">
-      <h3>Title</h3>
-      <p>Description</p>
-    </div>
-  </div>
-</div>
+```json
+{"type":"choice","choice":"single","screen":"layout.html","timestamp":1794268800000}
 ```
 
-**Multi-select:** Add `data-multiselect` to the container to let users select multiple options. Each click toggles the item's selected styling.
+The injected helper identifies the displayed screen. The server stamps legacy
+events without a screen ID and ignores queued events naming an obsolete screen.
+Read this stream before pushing a new screen, then transfer durable decisions
+to product state. Browser events are feedback, not artifact approval records.
 
-```html
-<div class="options" data-multiselect>
-  <!-- same option markup — users can select/deselect multiple -->
-</div>
-```
-
-### Cards (visual designs)
-
-```html
-<div class="cards">
-  <div class="card" data-choice="design1" onclick="toggleSelect(this)">
-    <div class="card-image"><!-- mockup content --></div>
-    <div class="card-body">
-      <h3>Name</h3>
-      <p>Description</p>
-    </div>
-  </div>
-</div>
-```
-
-### Mockup container
-
-```html
-<div class="mockup">
-  <div class="mockup-header">Preview: Dashboard Layout</div>
-  <div class="mockup-body"><!-- your mockup HTML --></div>
-</div>
-```
-
-### Split view (side-by-side)
-
-```html
-<div class="split">
-  <div class="mockup"><!-- left --></div>
-  <div class="mockup"><!-- right --></div>
-</div>
-```
-
-### Pros/Cons
-
-```html
-<div class="pros-cons">
-  <div class="pros"><h4>Pros</h4><ul><li>Benefit</li></ul></div>
-  <div class="cons"><h4>Cons</h4><ul><li>Drawback</li></ul></div>
-</div>
-```
-
-### Mock elements (wireframe building blocks)
-
-```html
-<div class="mock-nav">Logo | Home | About | Contact</div>
-<div style="display: flex;">
-  <div class="mock-sidebar">Navigation</div>
-  <div class="mock-content">Main content area</div>
-</div>
-<button class="mock-button">Action Button</button>
-<input class="mock-input" placeholder="Input field">
-<div class="placeholder">Placeholder area</div>
-```
-
-### Typography and sections
-
-- `h2` — page title
-- `h3` — section heading
-- `.subtitle` — secondary text below title
-- `.section` — content block with bottom margin
-- `.label` — small uppercase label text
-
-## Browser Events Format
-
-When the user clicks options in the browser, their interactions are recorded to `$STATE_DIR/events` (one JSON object per line). The file is cleared automatically when you push a new screen.
-
-```jsonl
-{"type":"click","choice":"a","text":"Option A - Simple Layout","timestamp":1706000101}
-{"type":"click","choice":"c","text":"Option C - Complex Grid","timestamp":1706000108}
-{"type":"click","choice":"b","text":"Option B - Hybrid","timestamp":1706000115}
-```
-
-The full event stream shows the user's exploration path — they may click multiple options before settling. The last `choice` event is typically the final selection, but the pattern of clicks can reveal hesitation or preferences worth asking about.
-
-If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser — use only their terminal text.
-
-## Design Tips
-
-- **Scale fidelity to the question** — wireframes for layout, polish for polish questions
-- **Explain the question on each page** — "Which layout feels more professional?" not just "Pick one"
-- **Iterate before advancing** — if feedback changes current screen, write a new version
-- **2-4 options max** per screen
-- **Use real content when it matters** — for a photography portfolio, use actual images (Unsplash). Placeholder content obscures design issues.
-- **Keep mockups simple** — focus on layout and structure, not pixel-perfect design
-
-## File Naming
-
-- Use semantic names: `platform.html`, `visual-style.html`, `layout.html`
-- Never reuse filenames — each screen must be a new file
-- For iterations: append version suffix like `layout-v2.html`, `layout-v3.html`
-- Server serves newest file by modification time
-
-## Cleaning Up
-
-PowerShell on Windows:
+## Stop
 
 ```powershell
 & scripts/stop-server.ps1 -SessionDir C:\path\to\session
 ```
 
-POSIX shell:
-
 ```bash
-bash scripts/stop-server.sh $SESSION_DIR
+bash scripts/stop-server.sh /path/to/session
 ```
 
-If the session used `--project-dir`, mockup files persist in `.relayforge/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
-
-## Reference
-
-- Frame template (CSS reference): `scripts/frame-template.html`
-- Helper script (client-side): `scripts/helper.js`
+Stopping verifies the authenticated server instance and requests shutdown over
+HTTP. No process-name matching, CIM query or blind PID termination is used.
+If a live process cannot be verified, stop fails and preserves its metadata;
+it does not report a stopped server. This also protects unrelated reused PIDs.
+Session content and logs remain available for a later resume. Idle shutdown
+defaults to four hours; configure `-IdleTimeoutMinutes` or
+`--idle-timeout-minutes` if needed. Do not keep the companion running once the
+visual discussion has finished.
