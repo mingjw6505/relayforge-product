@@ -60,9 +60,14 @@ mechanism with `--foreground`. `CODEX_CI` selects foreground automatically;
 background launch; `-Foreground` is only for a persistent terminal.
 
 If Node or the selected launcher is unavailable, or startup fails for an
-environment reason, report the short cause and create a self-contained static
-prototype under the project's prototype directory. Do not spend the product
-session troubleshooting companion infrastructure.
+environment reason, follow
+[panel runtime recovery](../using-relayforge-product/references/panel-recovery.md)
+with component `companion` once. A verified missing/old Node runtime prompts an
+optional installation choice in chat; Python is not needed for this panel.
+While the choice is pending or declined, create a self-contained static prototype
+under the project's prototype directory. A browser-opening failure with a healthy
+server is not a reason to install Node again; share the returned URL. Keep any
+repair bounded and preserve the current session/screens when retrying.
 
 ## Discuss screens
 

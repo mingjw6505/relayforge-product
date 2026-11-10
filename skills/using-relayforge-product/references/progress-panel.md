@@ -3,6 +3,10 @@
 Use the bundled `relayforge-product-progress` tools when available for actual
 RelayForge product work. This is a view of the product workflow, not a new
 approval authority. Missing tools/UI/runtime must not block product work.
+When tools are missing, launch fails, node_unavailable is reported or the user
+reports a panel failure, follow [panel runtime recovery](panel-recovery.md) once:
+diagnose first, offer an explicit installation choice for evidenced runtime
+problems, and continue text progress while the optional choice is pending.
 
 ## One task, one selected requirement
 
@@ -126,6 +130,8 @@ a timer or to force updates. A revision conflict supplies this run's current
 snapshot: reconcile and retry once, retaining the latest revision. Identical
 response-loss retries do not duplicate history. Missing/pruned state means
 unavailable progress; continue the product work without restart/install loops.
+A missing/pruned task alone is not evidence of a missing runtime and must not
+trigger an installation offer.
 
 Keep necessary findings, questions and final results in chat. Do not repeat
 the full card checklist after every update. Closing/pausing the card does not

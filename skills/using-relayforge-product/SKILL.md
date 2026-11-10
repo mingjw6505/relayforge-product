@@ -27,11 +27,22 @@ Stop before coding, implementation planning, testing, deployment, or release.
 Do not connect to an issue tracker or external MCP service for the default
 workflow.
 
+## Panel availability
+
+At the start of requested product work, if bundled progress tools are absent,
+follow [panel runtime recovery](references/panel-recovery.md) once. Use the same
+recovery after a panel/tool launch error, node_unavailable source result or a
+user report that a panel cannot open. Diagnose the affected component first;
+offer installation only for an evidenced runtime problem, with a concrete plan
+and explicit user choice in chat. Missing progress UI must not block requirement
+initialization or the requested product work. Do not repeatedly prompt after a
+decline, infer rendering success from a tool response, or install automatically.
+
 ## Identify the requirement
 
 Treat the current project workspace as the default project root. Follow existing
 documentation conventions when they are explicit. Otherwise use
-`docs/relayforge/` and the paths in `docs/relayforge/README.md`.
+`docs/relayforge/` and the artifact paths below.
 
 When a project uses another documentation root, substitute it consistently in
 all state and artifact paths below and pass `--docs-dir <project-relative-dir>`
@@ -231,3 +242,4 @@ and latest revision across specialist transitions. Use real source records and
 actual selected Skill loads. Update after registration, real waits, approval and
 invalidation. A stage draft delivery is not full product completion. Missing
 progress tools/runtime must not block product work or create restart loops.
+Use the recovery above to offer optional setup instead of silently degrading.

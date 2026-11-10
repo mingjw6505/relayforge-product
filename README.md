@@ -91,13 +91,19 @@ and [state helper commands](skills/using-relayforge-product/references/state-com
 
 Product outputs are written to the current project workspace. Existing project
 conventions take precedence; otherwise use `docs/relayforge/` as described in
-[`docs/relayforge/README.md`](docs/relayforge/README.md).
+the [workflow controller](skills/using-relayforge-product/SKILL.md).
 
 The optional bundled product progress card shows product stages, artifacts and
 approval scope using the selected workflow's read-only snapshot. It uses local
 Python 3.11+ and Node.js 18+ for factual state collection, with no credentials,
 cloud services or hooks. Core product work can continue without the card.
-See [panel setup, boundaries and verification](docs/progress-panel.md).
+If a panel cannot start, the controller checks the affected runtime once and
+offers a concrete choice in chat: assisted installation after consent, manual
+setup instructions, or continuing without installation. Existing Python launch
+command mismatches are handled separately from missing runtimes. Host rendering
+failures cannot always be observed automatically; report them in chat to trigger
+diagnosis. See [panel recovery and setup](skills/using-relayforge-product/references/panel-recovery.md)
+and [panel boundaries](skills/using-relayforge-product/references/progress-panel.md).
 The UI/SDK is already bundled; contributors run npm ci in progress_panel/web
 before UI build/tests. Runtime use does not require npm or network access.
 

@@ -114,7 +114,9 @@ class ProgressServer:
                     "Product facts are imported read-only; never infer approval from a draft or skill load. "
                     "Keep standard/fast mode, stage delivery and product approval distinct. "
                     "Only explicit, version-bound user confirmation authorizes the existing approval workflow. "
-                    "Unavailable progress must not block product work; do not install or restart to populate the card."
+                    "Unavailable progress must not block product work. On missing tools, launch failure or node_unavailable, "
+                    "follow the controller's panel-recovery guide: diagnose once and offer a concrete optional installation "
+                    "choice in chat for verified runtime problems. Never install without explicit consent or loop restarts."
                 ),
             }
         if method in {"ping", "resources/templates/list"}:
