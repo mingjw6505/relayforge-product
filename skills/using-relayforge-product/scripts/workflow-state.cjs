@@ -437,6 +437,15 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const command = args._[0];
   if (command === 'init') initialize(args);
+  else if (command === 'snapshot') {
+    const { snapshot } = require('./workflow-snapshot.cjs');
+    let result;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try { result = snapshot(args, { loadContext, checkArtifacts, fingerprint, extractField }); break; }
+      catch (error) { if (error.message !== 'source_changed' || attempt) throw error; }
+    }
+    process.stdout.write(JSON.stringify(result) + '\n');
+  }
   else if (command === 'hash') {
     if (!args.path) throw new Error('--path is required');
     process.stdout.write(JSON.stringify({ path: path.resolve(args.path), sha256: fingerprint(args.path) }) + '\n');
@@ -458,7 +467,7 @@ function main() {
     }
     process.stdout.write(JSON.stringify(result) + '\n');
   } else {
-    throw new Error('Usage: workflow-state.cjs <init|hash|mode|register|approve|check|gate> [options]');
+    throw new Error('Usage: workflow-state.cjs <init|hash|mode|register|approve|check|gate|snapshot> [options]');
   }
 }
 
@@ -467,4 +476,4 @@ if (require.main === module) {
 }
 
 module.exports = { availableSlug, fingerprint, stateTemplate, validateSlug, loadContext, checkArtifacts,
-  registerArtifact, approveArtifact, gate, setMode };
+  registerArtifact, approveArtifact, gate, setMode, extractField };

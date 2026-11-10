@@ -68,3 +68,12 @@ record spec approval with `--include-inputs true`. This leaves the input PRD and
 prototype individually unapproved while approving the final product
 specification. Stop at review until this response arrives; then complete the
 product workflow and return the approved handoff.
+
+## Product progress
+
+Reuse the controller's current run and latest revision under the
+[product progress contract](../using-relayforge-product/references/progress-panel.md).
+When available, load this actually selected Skill through load_product_skill once,
+then update at real artifact/decision milestones and actual waits. Do not create
+another card, infer approval from completion, or bypass the existing confirmation
+rules. If tools are unavailable, continue with the normal Skill and text workflow.

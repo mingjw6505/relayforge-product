@@ -43,3 +43,12 @@ design tree and ask for an artifact-specific confirmation before handing off to
 PRD, prototype, or spec work. Use the confirmation binding rules in the shared
 workflow contract; do not interpret an ambiguous generic confirmation as
 approval.
+
+## Product progress
+
+Reuse the controller's current run and latest revision under the
+[product progress contract](../using-relayforge-product/references/progress-panel.md).
+When available, load this actually selected Skill through load_product_skill once,
+then update at real artifact/decision milestones and actual waits. Do not create
+another card, infer approval from completion, or bypass the existing confirmation
+rules. If tools are unavailable, continue with the normal Skill and text workflow.

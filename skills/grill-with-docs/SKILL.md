@@ -30,3 +30,12 @@ decision record follows the controller's artifact/version binding rules.
 Register meaningful decision records with stable IDs (kind `decision`), and
 include these IDs in dependent artifact inputs. In fast mode, defer intermediate
 approval and carry unconfirmed decisions into the spec as labeled assumptions.
+
+## Product progress
+
+Reuse the controller's current run and latest revision under the
+[product progress contract](../using-relayforge-product/references/progress-panel.md).
+When available, load this actually selected Skill through load_product_skill once,
+then update at real artifact/decision milestones and actual waits. Do not create
+another card, infer approval from completion, or bypass the existing confirmation
+rules. If tools are unavailable, continue with the normal Skill and text workflow.

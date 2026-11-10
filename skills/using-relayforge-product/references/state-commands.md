@@ -105,3 +105,18 @@ approval's original scope, time and user. Link dependencies using the actual
 versions used to produce the output. If that provenance is unknown, set
 `review_required: true`, status `ready-for-review`, and approval state `stale`.
 Do not fabricate a current approval from an old `approved` label alone.
+
+## Read-only product snapshot
+
+```text
+node <skill-dir>/scripts/workflow-state.cjs snapshot --project-dir <project-root> --state <state-file>
+```
+
+`snapshot` performs read-only fingerprint/dependency checks in a private memory
+context and returns bounded product facts plus source identity/time. It never
+writes state, metadata or the active pointer. Business invalidation returns a
+valid JSON result with integrity=invalid; technical errors exit nonzero. Existing
+`check` and `gate` still persist invalidation and must not be used for UI polling.
+The snapshot excludes confirmation text and raw request bodies. Symlink escapes,
+oversized records and mixed-version reads fail closed. Legacy table-only state
+requires explicit migration; no automatic migration is performed.

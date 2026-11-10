@@ -26,6 +26,77 @@ test('validates portable requirement slugs', () => {
   assert.throws(() => validateSlug('con'));
 });
 
+test('snapshot projects valid approvals and transitive invalidation without writing files', t => {
+  const w = workflow(t);
+  w.write('prd'); w.register('prd'); w.approve('prd');
+  w.write('spec'); w.register('spec', 'prd'); w.approve('spec');
+  const read = () => {
+    const result = spawnSync(process.execPath, [helperScript, 'snapshot', '--project-dir', w.root, '--state', 'state.md'], { encoding: 'utf8' });
+    assert.strictEqual(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout);
+  };
+  const before = fs.readFileSync(path.join(w.root, 'state.md'));
+  const valid = read();
+  assert.strictEqual(valid.product.integrity.status, 'valid');
+  assert.strictEqual(valid.product.current_stage, 'completed');
+  assert.strictEqual(valid.product.artifacts.find(a => a.id === 'spec').effective_status, 'approved');
+  assert.ok(!JSON.stringify(valid).includes('confirmation'));
+  fs.appendFileSync(path.join(w.root, 'prd.md'), '\nNew scope\n');
+  const invalid = read();
+  assert.strictEqual(invalid.product.integrity.status, 'invalid');
+  assert.deepStrictEqual(invalid.product.integrity.affected.sort(), ['prd', 'spec']);
+  assert.strictEqual(invalid.product.observed_stage, 'prd');
+  assert.strictEqual(invalid.product.artifacts.find(a => a.id === 'spec').effective_status, 'needs-review');
+  assert.deepStrictEqual(fs.readFileSync(path.join(w.root, 'state.md')), before);
+});
+
+test('snapshot preserves persisted stale approvals after restoring bytes and rejects symlink escapes', t => {
+  const w = workflow(t);
+  w.write('prd'); w.register('prd'); w.approve('prd');
+  const file = path.join(w.root, 'prd.md');
+  const original = fs.readFileSync(file);
+  fs.appendFileSync(file, '\nChange\n');
+  checkArtifacts(w.ctx);
+  // Persist exactly the already-invalidated context through the normal public CLI.
+  const checked = spawnSync(process.execPath, [helperScript,'check','--project-dir',w.root,'--state','state.md'],{encoding:'utf8'});
+  assert.strictEqual(checked.status,1);
+  fs.writeFileSync(file,original);
+  const read = () => spawnSync(process.execPath,[helperScript,'snapshot','--project-dir',w.root,'--state','state.md'],{encoding:'utf8'});
+  const stale=read();assert.strictEqual(stale.status,0,stale.stderr);
+  assert.strictEqual(JSON.parse(stale.stdout).product.artifacts[0].effective_status,'needs-review');
+  assert.strictEqual(JSON.parse(stale.stdout).product.approvals[0].state,'stale');
+  fs.unlinkSync(file);
+  fs.symlinkSync(path.join(w.root,'state.md'),file);
+  const unsafe=read();assert.notStrictEqual(unsafe.status,0);assert.match(unsafe.stderr,/unsafe_source/);
+});
+
+test('snapshot handles empty state and legacy tables without initialization or migration', t => {
+  const w=workflow(t);
+  const read=()=>spawnSync(process.execPath,[helperScript,'snapshot','--project-dir',w.root,'--state','state.md'],{encoding:'utf8'});
+  const before=fs.readFileSync(path.join(w.root,'state.md'));
+  const empty=read();assert.strictEqual(empty.status,0,empty.stderr);
+  assert.deepStrictEqual(JSON.parse(empty.stdout).product.artifacts,[]);
+  assert.deepStrictEqual(fs.readFileSync(path.join(w.root,'state.md')),before);
+  fs.appendFileSync(path.join(w.root,'state.md'),'\n| PRD | old.md | v1 | approved |\n');
+  const legacy=read();assert.notStrictEqual(legacy.status,0);assert.match(legacy.stderr,/migration_required/);
+});
+
+test('snapshot rejects mixed-version reads and oversized artifact collections', t => {
+  const w=workflow(t);w.write('prd');w.register('prd');
+  const rules=require('../skills/using-relayforge-product/scripts/workflow-state.cjs');
+  const {snapshot}=require('../skills/using-relayforge-product/scripts/workflow-snapshot.cjs');
+  let calls=0;
+  assert.throws(()=>snapshot({'project-dir':w.root,state:'state.md'},{...rules,fingerprint(file){
+    const result=rules.fingerprint(file);
+    if(++calls===1)fs.appendFileSync(file,'\nConcurrent edit\n');
+    return result;
+  }}),/source_changed/);
+  const records={schema_version:1,artifacts:Object.fromEntries(Array.from({length:65},(_,i)=>['a'+i,{kind:'prd'}])),approvals:[]};
+  fs.writeFileSync(path.join(w.root,'state.md'),stateTemplate({name:'Large',slug:'large',request:'Example',now:'2026-11-10T10:00:00+08:00'})+'\n## Artifact records\n\n```json\n'+JSON.stringify(records)+'\n```\n');
+  const result=spawnSync(process.execPath,[helperScript,'snapshot','--project-dir',w.root,'--state','state.md'],{encoding:'utf8'});
+  assert.notStrictEqual(result.status,0);assert.match(result.stderr,/source_too_large/);
+});
+
 test('resumes a UTF-8 BOM/CRLF state without duplicating the requirement', (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'relayforge-crlf-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

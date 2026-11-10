@@ -1,0 +1,37 @@
+<p class="rf-empty" data-ui="empty" role="status">正在载入本需求的产品进度…</p>
+<article class="rf-card" data-ui="task" aria-label="产品进度" hidden>
+  <header class="rf-top"><span class="rf-brand">RelayForge · 产品进度</span><span class="rf-status" data-ui="status" role="status"></span></header>
+  <h1 data-ui="title"></h1>
+  <ol class="rf-steps" data-ui="steps" aria-label="本次范围的产品步骤，可横向滚动" tabindex="0"></ol>
+  <div class="rf-row rf-current"><span class="rf-label" data-ui="current-label">当前</span><span class="rf-value" data-ui="current"></span></div>
+  <p class="rf-attention" data-ui="attention" role="status" hidden></p>
+  <dl class="rf-meta">
+    <div><dt>工作模式</dt><dd><span class="rf-mode-badge" data-ui="mode"></span></dd></div>
+    <div><dt>当前阶段</dt><dd data-ui="stage"></dd></div>
+    <div><dt>当前产物</dt><dd data-ui="artifact"></dd></div>
+    <div><dt>当前工作流</dt><dd class="rf-code" data-ui="workflow"></dd></div>
+    <div><dt>已加载 Skill</dt><dd class="rf-code" data-ui="skills"></dd></div>
+  </dl>
+  <p class="rf-stale" data-ui="stale" hidden>阶段暂无新申报；同步正常，产品工作可能仍在进行。</p>
+  <footer class="rf-footer"><button class="rf-text-button" type="button" data-ui="details" aria-expanded="false" aria-controls="rf-records"><span data-ui="details-label">查看详情</span><span class="rf-chevron" aria-hidden="true">⌄</span></button></footer>
+  <section class="rf-records" id="rf-records" data-ui="records" aria-label="产品进度详情" hidden>
+    <section class="rf-detail-section">
+      <h2>进展与下一步</h2>
+      <div class="rf-row"><span class="rf-label">进展</span><span class="rf-value" data-ui="change"></span></div>
+      <div class="rf-row"><span class="rf-label">下一步</span><span class="rf-value" data-ui="remaining"></span></div>
+    </section>
+    <section class="rf-detail-section"><h2>产物与审批</h2><ol class="rf-artifacts" data-ui="artifacts"></ol><p data-ui="confirmation"></p></section>
+    <section class="rf-detail-section"><h2>就绪检查与待确认项</h2><p data-ui="readiness"></p><div data-ui="issues"></div></section>
+    <section class="rf-detail-section">
+      <div class="rf-record-heading"><h2>阶段记录</h2><span data-ui="history-count"></span></div>
+      <ol class="rf-history" data-ui="history"></ol>
+      <button class="rf-text-button rf-more" type="button" data-ui="more-history" hidden>查看全部记录</button>
+    </section>
+    <details class="rf-disclosure" data-ui="input-section"><summary>输入版本与审批依据</summary><div class="rf-inputs" data-ui="inputs"></div></details>
+    <details class="rf-disclosure" data-ui="load-section"><summary data-ui="load-heading">工作流与 Skill 加载记录</summary><ol class="rf-loads" data-ui="loads"></ol></details>
+    <p class="rf-source">产品状态来自最近核对的工作流快照，动作由 Agent 申报。Skill 已加载只表示读取说明。审批须在对话中明确确认。</p>
+    <div class="rf-settings"><span data-ui="updated"></span><button class="rf-text-button" data-ui="refresh" type="button">暂停刷新</button></div>
+    <p class="rf-source" data-ui="checked"></p>
+  </section>
+</article>
+<p class="rf-notice" data-ui="connection" role="status"></p>

@@ -194,9 +194,37 @@ def check_documents(root):
     return yaml_count
 
 
+def check_progress(root):
+    """Validate both registrations and shipped resources without starting a service."""
+    portable = read_json(root / "mcp.json")
+    native = read_json(root / ".mcp.json")
+    if portable.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json":
+        raise ValueError("Portable MCP schema is required")
+    expected = {"command": "python3", "args": ["-m", "progress_panel.server"], "cwd": "./"}
+    key = "relayforge-product-progress"
+    if portable != {"$schema": portable["$schema"], "mcpServers": {key: {"type": "stdio", **expected}}}:
+        raise ValueError("Unexpected portable product MCP registration")
+    if native != {"mcpServers": {key: expected}}:
+        raise ValueError("Native product MCP registration differs")
+    manifest = read_json(root / "plugin.json")
+    if manifest.get("extensions", {}).get("com.openai", {}).get("mcpServers") != "./.mcp.json":
+        raise ValueError("Portable OpenAI compatibility MCP reference is missing")
+    for name in [".codex-plugin/plugin.json", ".claude-plugin/plugin.json"]:
+        if read_json(root / name).get("mcpServers") != "./.mcp.json":
+            raise ValueError(f"{name}: product MCP reference is missing")
+    for name in ["server.py", "state.py", "source.py", "skills.py", "protocol.py", "static/panel.html", "THIRD_PARTY_NOTICES.txt"]:
+        if not (root / "progress_panel" / name).is_file():
+            raise ValueError(f"Missing product panel file: {name}")
+    html = (root / "progress_panel/static/panel.html").read_text(encoding="utf-8")
+    if ("RelayForge Product Progress" not in html or "read_product_progress" not in html or
+            "{{" in html or f'"{manifest["version"]}"' not in html):
+        raise ValueError("Bundled product panel is missing, stale, or not built")
+
+
 def run_checks(root, structure_only=False):
     version = check_metadata(root)
     yaml_count = check_documents(root)
+    check_progress(root)
     print(f"Metadata, versions ({version}), {yaml_count} YAML files, Markdown fences and links: passed", flush=True)
     if structure_only:
         return
@@ -207,6 +235,8 @@ def run_checks(root, structure_only=False):
         subprocess.run([node, "--check", str(script)], check=True, cwd=root)
     subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "test", "-p", "test_*.py"], check=True, cwd=root)
     subprocess.run([node, "--test", *map(str, sorted((root / "test").glob("*.test.cjs")))], check=True, cwd=root)
+    subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "progress_panel/tests", "-p", "test_*.py"], check=True, cwd=root)
+    subprocess.run([node, "--test", *map(str, sorted((root / "progress_panel/web/tests").glob("*.test.mjs")))], check=True, cwd=root)
     claude = shutil.which("claude")
     if claude:
         # Windows npm shims are .cmd files; use their native shell invocation.

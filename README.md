@@ -15,6 +15,8 @@ It deliberately stops before implementation, testing, deployment, and release.
 - `.agents/plugins/marketplace.json` — repo marketplace manifest for Codex/ChatGPT.
 - `.claude-plugin/marketplace.json` — native Claude Code marketplace manifest.
 - `skills/` — reusable workflows, one directory per skill.
+- `progress_panel/` — optional local MCP product progress service and bundled inline UI.
+- `mcp.json` / `.mcp.json` — portable / native compatibility MCP registration.
 - `AGENTS.md` — repository guidance for Codex contributors.
 
 The main entry point is `using-relayforge-product`. It routes natural-language
@@ -91,7 +93,13 @@ Product outputs are written to the current project workspace. Existing project
 conventions take precedence; otherwise use `docs/relayforge/` as described in
 [`docs/relayforge/README.md`](docs/relayforge/README.md).
 
-No MCP server, hooks, credentials, or runtime dependencies are configured.
+The optional bundled product progress card shows product stages, artifacts and
+approval scope using the selected workflow's read-only snapshot. It uses local
+Python 3.11+ and Node.js 18+ for factual state collection, with no credentials,
+cloud services or hooks. Core product work can continue without the card.
+See [panel setup, boundaries and verification](docs/progress-panel.md).
+The UI/SDK is already bundled; contributors run npm ci in progress_panel/web
+before UI build/tests. Runtime use does not require npm or network access.
 
 The optional browser visual companion has native Bash and PowerShell launchers.
 On Windows, use `skills/brainstorming/scripts/start-server.ps1`; it requires

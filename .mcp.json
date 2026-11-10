@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "relayforge-product-progress": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "progress_panel.server"
+      ],
+      "cwd": "./"
+    }
+  }
+}

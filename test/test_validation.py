@@ -12,6 +12,26 @@ spec.loader.exec_module(checks)
 
 
 class ValidationTests(unittest.TestCase):
+    def test_product_registration_and_stale_bundle_are_rejected(self):
+        with tempfile.TemporaryDirectory(prefix="relayforge-panel-package-") as directory:
+            root = Path(directory)
+            files = ["plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json", "mcp.json", ".mcp.json",
+                     *["progress_panel/" + p for p in ["server.py", "state.py", "source.py", "skills.py", "protocol.py", "static/panel.html", "THIRD_PARTY_NOTICES.txt"]]]
+            for name in files:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / name, target)
+            checks.check_progress(root)
+            native = root / ".mcp.json"
+            original = native.read_text()
+            native.write_text('{"mcpServers":{}}')
+            with self.assertRaisesRegex(ValueError, "differs"):
+                checks.check_progress(root)
+            native.write_text(original)
+            (root / "progress_panel/static/panel.html").write_text("Unbuilt template {{CARD}}")
+            with self.assertRaisesRegex(ValueError, "not built"):
+                checks.check_progress(root)
+
     def test_portable_schema_rejects_host_fields_and_wrong_nested_types(self):
         schema = checks.read_json(ROOT / "scripts/schemas/agent-plugins-1.0.0.schema.json")
         valid = checks.read_json(ROOT / "plugin.json")

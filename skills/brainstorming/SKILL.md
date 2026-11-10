@@ -72,3 +72,12 @@ continue to PRD or spec drafts, retaining labeled assumptions. The final spec
 confirmation must explicitly cover the referenced core interactions. An
 interactive companion still needs user acceptance; use a static prototype
 when appropriate to keep the requested draft sequence moving.
+
+## Product progress
+
+Reuse the controller's current run and latest revision under the
+[product progress contract](../using-relayforge-product/references/progress-panel.md).
+When available, load this actually selected Skill through load_product_skill once,
+then update at real artifact/decision milestones and actual waits. Do not create
+another card, infer approval from completion, or bypass the existing confirmation
+rules. If tools are unavailable, continue with the normal Skill and text workflow.

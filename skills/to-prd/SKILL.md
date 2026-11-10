@@ -69,3 +69,12 @@ confirmation recorded in the state approval log may change the PRD status to
 In fast mode, defer this intermediate confirmation and continue to the relevant
 prototype and specification drafts. Keep the PRD `ready-for-review`; the final
 spec confirmation explicitly covers its referenced PRD goal and scope.
+
+## Product progress
+
+Reuse the controller's current run and latest revision under the
+[product progress contract](../using-relayforge-product/references/progress-panel.md).
+When available, load this actually selected Skill through load_product_skill once,
+then update at real artifact/decision milestones and actual waits. Do not create
+another card, infer approval from completion, or bypass the existing confirmation
+rules. If tools are unavailable, continue with the normal Skill and text workflow.

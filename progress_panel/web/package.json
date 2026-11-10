@@ -1,0 +1,14 @@
+{
+  "name": "relayforge-product-progress-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "preview": "node preview.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/ext-apps": "2.0.4",
+    "esbuild": "0.28.2"
+  }
+}
