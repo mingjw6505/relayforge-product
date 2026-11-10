@@ -13,7 +13,17 @@ problems, and continue text progress while the optional choice is pending.
 Apply this before the first discovery/interview question or artifact, including
 a direct specialist invocation or a generic “请使用插件帮我生成 PRD”. Reuse a
 check already performed for this conversation; do not repeat it on each stage.
-This is an agent instruction, not a host startup hook or proof that setup ran.
+The trusted Codex SessionStart hook supplies a native preflight report even if
+Python, Node and progress MCP tools are absent. This does not prove setup ran
+on a host that disabled, rejected or did not support the hook.
+
+First use the native startup report already in context. If it is absent, run the
+native checker once through the available system shell as described in
+[panel recovery](panel-recovery.md#native-check-before-runtime-dependent-diagnostics).
+If runtimes are missing, keep the user-visible notice and installation choice
+in chat; offer a concrete plan and wait for consent before any installation.
+Remember a decline and keep product work moving. Do not require the Node checker
+or the progress MCP server to make this first check.
 
 1. Inspect whether start_product_progress and update_product_progress are
    actually available in this chat. An installed/enabled plugin or an MCP

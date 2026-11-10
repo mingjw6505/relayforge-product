@@ -1,0 +1,20 @@
+{
+  "description": "Native, read-only RelayForge Product startup environment check. Never installs software.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|clear)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh \"$PLUGIN_ROOT/hooks/check-runtime.sh\"",
+            "commandWindows": "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -Command \"& (Join-Path ([Environment]::GetEnvironmentVariable('PLUGIN_ROOT')) 'hooks/check-runtime.ps1')\"",
+            "timeout": 15,
+            "additionalContextLimit": 1500,
+            "statusMessage": "Checking RelayForge Product runtime"
+          }
+        ]
+      }
+    ]
+  }
+}

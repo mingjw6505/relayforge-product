@@ -1,11 +1,12 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "relayforge-product",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Product-side workflows for clarifying requirements, shaping user experience, writing PRDs, prototyping, and producing approved product specifications.",
   "extensions": {
     "com.openai": {
-      "mcpServers": "./.mcp.json"
+      "mcpServers": "./.mcp.json",
+      "hooks": "./hooks/codex-runtime.json"
     }
   }
 }

@@ -6,7 +6,51 @@ the user reports that a panel cannot open. Check once per affected component
 per conversation; repeat only after a user-requested repair or new evidence.
 Do not create a product requirement for an environment repair.
 
-## Diagnose before offering installation
+## Native check before runtime-dependent diagnostics
+
+On Codex local desktop/CLI, the plugin registers a SessionStart hook for a new or
+cleared chat. Windows uses the built-in Windows PowerShell; macOS/Linux use
+`/bin/sh` and system utilities. The checker itself requires neither Python nor
+Node, does not call MCP, and does not download or install anything. It locates
+optional runtimes and probes only those already found, with bounded execution
+and Python automatic-install flags disabled. It reads no prompt or transcript.
+
+The hook sends a `systemMessage` with an environment notice and setup choices to
+the host UI/event stream when a check fails, plus `additionalContext` containing
+the observed node/python statuses and instructions for the assistant. Healthy
+environments produce no warning. This output does not depend on an agent having
+selected the controller or on a working progress panel. Ask the user through
+the host's choice tool when available, otherwise in chat, after showing the
+concrete plan required below. A warning's assisted-setup option is not itself
+consent to an unspecified install command.
+
+Codex requires review/trust before running plugin hooks. Direct users to
+**Settings > Hooks / Review hooks** for this plugin; never modify their trust
+settings automatically. Hooks disabled by the user/admin, unsupported hosts,
+or OS restrictions cannot be bypassed. In that case the Skill must explicitly
+run the native checker instead, or report that shell access is unavailable.
+The hook runs on startup/clear, not every prompt or resume, to avoid repeatedly
+asking about an already declined installation. An upgrade requires a new hook
+review when Codex requests it. After consenting to a repair, explicitly recheck.
+
+Manual/Skill fallback from the actual installed plugin root:
+
+```powershell
+& "<plugin-root>/hooks/check-runtime.ps1" -Format Json
+```
+
+```sh
+/bin/sh "<plugin-root>/hooks/check-runtime.sh" --json
+```
+
+The native report identifies `node` and `python` as ready, missing, unsupported,
+sqlite_unavailable (Python), or probe_failed. Missing means no command was found
+on this process's PATH, not proof that no install exists on disk. probe_failed
+is uncertainty, not absence: do not prescribe an install from a timeout or denied
+execution alone. If both are ready, no installation prompt is needed. Runtime
+readiness does not establish host MCP registration or successful UI rendering.
+
+## Deeper diagnosis after the native check
 
 Distinguish the inline product progress card (`progress`) from the optional
 browser visual companion (`companion`). Progress needs Python 3.11+ with the
@@ -15,7 +59,8 @@ standard-library sqlite3 module and Node.js 18+; the companion needs only Node.j
 or WSL at runtime. A missing tool is a trigger to check, not proof of a missing
 runtime. Never run diagnostics on unrelated general questions.
 
-When a shell and Node are available, run the bundled read-only checker, resolving
+After native checks find Node available, use this deeper read-only checker when
+service startup or host connection still needs diagnosis, resolving
 `<skill-dir>` to this controller's absolute directory, with a quoted path:
 
 ```text
@@ -37,14 +82,9 @@ probe has a five-second limit. The checker tests python and python3 (preferring
 python on Windows), plus Windows py -3, their versions and sqlite3, then performs an MCP initialize handshake in
 the plugin directory. It creates no task or progress cache and installs nothing.
 
-If Node itself cannot run, use the host's native shell to locate node and check
-its version. For progress, also locate/probe Python candidates and sqlite3 with
-the same constraints, without installing Node just to run the checker. Before
-Python probes set PYTHON_MANAGER_AUTOMATIC_INSTALL=false in the child environment
-and remove PYLAUNCHER_ALLOW_INSTALL and PYLAUNCHER_ALWAYS_INSTALL: some Windows
-launchers otherwise install on demand. Do not run install/exec launcher commands
-during diagnosis. If the host provides no shell, say that local detection is
-unavailable; offer manual setup instructions without claiming anything is missing.
+If Node itself cannot run, stay with the native checker above. Do not install
+Node merely to execute diagnostics. If the host provides no shell, say that local
+detection is unavailable; offer manual instructions without claiming a runtime is missing.
 
 | Evidence | Response |
 | --- | --- |

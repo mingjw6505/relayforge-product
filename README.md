@@ -95,8 +95,15 @@ the [workflow controller](skills/using-relayforge-product/SKILL.md).
 
 The optional bundled product progress card shows product stages, artifacts and
 approval scope using the selected workflow's read-only snapshot. It uses local
-Python 3.11+ and Node.js 18+ for factual state collection, with no credentials,
-cloud services or hooks. Core product work can continue without the card.
+Python 3.11+ and Node.js 18+ for factual state collection, with no credentials or
+cloud services. Core product work can continue without the card.
+The native Codex startup check runs independently of Python, Node and the MCP
+service: Windows uses its built-in PowerShell and macOS/Linux use system shell
+utilities. A failed check supplies a UI/event-stream notice with setup choices
+and assistant context. It installs nothing. Review/trust the plugin hook under
+Settings > Hooks / Review hooks; Codex skips untrusted or disabled hooks. A new
+or cleared chat runs the hook, not every prompt/resume. When hooks cannot run,
+the product Skill uses the same native check manually.
 The MCP entry uses the bundled Node launcher to locate a compatible Python
 interpreter (python, python3 or the Windows py launcher), then starts the service
 with its actual executable path. A working python command is sufficient on

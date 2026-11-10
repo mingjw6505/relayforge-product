@@ -223,10 +223,36 @@ def check_progress(root):
         raise ValueError("Bundled product panel is missing, stale, or not built")
 
 
+def check_startup(root):
+    reference = "./hooks/codex-runtime.json"
+    if read_json(root / "plugin.json").get("extensions", {}).get("com.openai", {}).get("hooks") != reference:
+        raise ValueError("Portable native startup hook reference is missing")
+    if read_json(root / ".codex-plugin/plugin.json").get("hooks") != reference:
+        raise ValueError("Codex native startup hook reference differs")
+    definition = read_json(root / reference)
+    groups = definition.get("hooks", {})
+    if set(groups) != {"SessionStart"} or len(groups["SessionStart"]) != 1:
+        raise ValueError("Startup check must not add unrelated lifecycle hooks")
+    group = groups["SessionStart"][0]
+    handler = group["hooks"][0]
+    if (group.get("matcher") != "^(startup|clear)$" or len(group["hooks"]) != 1 or
+            handler.get("type") != "command" or handler.get("timeout") != 15 or
+            not handler.get("command", "").startswith("/bin/sh ") or
+            not handler.get("commandWindows", "").startswith("powershell.exe ")):
+        raise ValueError("Startup checks must use bounded native OS commands")
+    for name in ["check-runtime.ps1", "check-runtime.sh", "python-probe.py", "runtime-notice.json"]:
+        if not (root / "hooks" / name).is_file():
+            raise ValueError(f"Missing native startup file: {name}")
+    if not isinstance(read_json(root / "hooks/runtime-notice.json"), str):
+        raise ValueError("Native startup notice must be a JSON string")
+    compile((root / "hooks/python-probe.py").read_text(encoding="utf-8"), "python-probe.py", "exec")
+
+
 def run_checks(root, structure_only=False):
     version = check_metadata(root)
     yaml_count = check_documents(root)
     check_progress(root)
+    check_startup(root)
     print(f"Metadata, versions ({version}), {yaml_count} YAML files, Markdown fences and links: passed", flush=True)
     if structure_only:
         return
