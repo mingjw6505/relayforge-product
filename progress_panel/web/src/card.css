@@ -104,7 +104,8 @@
 @media(pointer:coarse){.rf-progress button,.rf-progress summary {min-height:44px}}
 
 .rf-progress .rf-loads {display: grid; gap: 4px; padding-top: 7px}
-.rf-progress .rf-loads li {display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 8px; font-size: 10px; color: var(--rf-secondary)}
+.rf-progress .rf-loads li {display: grid; gap: 3px; font-size: 10px; color: var(--rf-secondary)}
+.rf-progress .rf-load-evidence {display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 8px}
 .rf-progress .rf-load-name {color: var(--rf-text); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
 .rf-progress .rf-source {margin: 9px 0 5px; font-size: 10px; color: var(--rf-muted)}
 .rf-progress .rf-settings {display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; font-size: 10px; color: var(--rf-muted)}

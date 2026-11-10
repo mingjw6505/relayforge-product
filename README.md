@@ -97,6 +97,11 @@ The optional bundled product progress card shows product stages, artifacts and
 approval scope using the selected workflow's read-only snapshot. It uses local
 Python 3.11+ and Node.js 18+ for factual state collection, with no credentials or
 cloud services. Core product work can continue without the card.
+Skill records combine bundled tool-read receipts with namespaced Agent use
+declarations for direct reads, host-provided instructions and external plugins.
+Details retain each source; declarations are not execution audits. Unreported
+use cannot be detected automatically. See the
+[progress contract](skills/using-relayforge-product/references/progress-panel.md#load-actual-selected-instructions).
 The native Codex startup check runs independently of Python, Node and the MCP
 service: Windows uses its built-in PowerShell and macOS/Linux use system shell
 utilities. A failed check supplies a UI/event-stream notice with setup choices

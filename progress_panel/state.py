@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
 import uuid
 from collections.abc import Iterator
@@ -19,6 +20,9 @@ RUN_STATUSES = {"running", "waiting", "completed", "blocked", "cancelled"}
 TERMINAL = {"completed", "blocked", "cancelled"}
 MAX_RUNS = 200
 MAX_HISTORY = 20
+SKILL_ID_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}(?::[A-Za-z0-9][A-Za-z0-9_-]{0,63})?$"
+SKILL_USE_VIAS = {"direct_read", "skill_tool", "context"}
+MAX_SKILL_USES = 64
 
 
 @dataclass
@@ -55,6 +59,40 @@ def run_id(value: object) -> str:
     if str(parsed) != value:
         raise ProgressError("invalid_run_id")
     return value
+
+
+def validate_skill_uses(value: object) -> list[dict[str, str]]:
+    """Accept use declarations, never caller-supplied receipts or filesystem paths."""
+    if not isinstance(value, list) or len(value) > 32:
+        raise ProgressError("invalid_skill_uses")
+    result: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for item in value:
+        if not isinstance(item, dict) or set(item) != {"skill", "via"}:
+            raise ProgressError("invalid_skill_uses")
+        skill, via = item["skill"], item["via"]
+        if (not isinstance(skill, str) or not re.fullmatch(SKILL_ID_PATTERN, skill)
+                or not isinstance(via, str) or via not in SKILL_USE_VIAS):
+            raise ProgressError("invalid_skill_uses")
+        qualified = skill if ":" in skill else f"host:{skill}"
+        key = (qualified, via)
+        if key in seen:
+            raise ProgressError("invalid_skill_uses")
+        seen.add(key)
+        result.append({"skill": qualified, "via": via})
+    return result
+
+
+def merge_skill_uses(
+    existing: list[Snapshot], declarations: list[dict[str, str]], at: str,
+) -> tuple[list[Snapshot], list[Snapshot]]:
+    """Append each actual-use declaration once while retaining its first receipt time."""
+    known = {(item["skill"], item["via"]) for item in existing}
+    added = [dict(item, source="agent_declared", recorded_at=at) for item in declarations
+             if (item["skill"], item["via"]) not in known]
+    if len(existing) + len(added) > MAX_SKILL_USES:
+        raise ProgressError("skill_use_limit")
+    return [*existing, *added], added
 
 
 def steps(value: object, status: str) -> list[dict[str, str]]:
@@ -274,6 +312,7 @@ class ProgressStore:
 
     def start(self, arguments: Snapshot, collected: Snapshot, bound: Snapshot) -> Snapshot:
         now = timestamp()
+        uses, added = merge_skill_uses([], validate_skill_uses(arguments.get("skill_uses", [])), now)
         previous = arguments.get("previous_run_id")
         if previous is not None:
             old = self.read(previous)
@@ -286,27 +325,30 @@ class ProgressStore:
             "summary": text(arguments.get("summary", ""), 240, empty=True),
             "details": stage_details(details(arguments.get("details")), "running"),
             "product": None, "confirmation_request": None, "outcome": None,
-            "workflow": None, "skill_loads": [], "history": [], "previous_run_id": previous,
+            "workflow": None, "skill_loads": [], "skill_uses": uses, "history": [], "previous_run_id": previous,
             "created_at": now, "updated_at": now, "_binding": bound,
         }, collected)
-        self._event(result, "started")
+        self._event(result, "started", added)
         with self.connection() as connection:
             connection.execute("BEGIN IMMEDIATE")
             self._write(connection, result); self._prune(connection, result["run_id"])
         return result
 
     @staticmethod
-    def _event(snapshot: Snapshot, kind: str) -> None:
+    def _event(snapshot: Snapshot, kind: str, added_uses: list[Snapshot] | None = None) -> None:
         product = snapshot.get("product") or {}
         event = {"revision": snapshot["revision"], "at": timestamp(), "kind": kind,
                  "status": snapshot["status"], "summary": snapshot["summary"],
                  "details": snapshot["details"], "workflow_mode": product.get("workflow_mode"),
                  "stage": product.get("observed_stage"), "source_state": snapshot["source_state"],
                  "current_step": next((s["label"] for s in snapshot["steps"] if s["status"] in {"active", "blocked"}), "")}
+        if added_uses:
+            event["skill_uses"] = added_uses
         snapshot["history"] = (snapshot["history"] + [event])[-MAX_HISTORY:]
 
     def update(self, arguments: Snapshot, collected: Snapshot) -> Snapshot:
         import hashlib
+        declared_uses = validate_skill_uses(arguments.get("skill_uses", []))
         expected = arguments["expected_revision"]
         if type(expected) is not int or expected < 1:
             raise ProgressError("invalid_revision")
@@ -324,6 +366,8 @@ class ProgressStore:
             if status not in RUN_STATUSES:
                 raise ProgressError("invalid_status")
             result = merge_source(current, collected)
+            uses, added = merge_skill_uses(current.get("skill_uses", []), declared_uses, timestamp())
+            result["skill_uses"] = uses
             result.update(status=status, steps=steps(arguments["steps"], status),
                           summary=text(arguments.get("summary", ""), 240, empty=True),
                           details=stage_details(details(arguments["details"]) if "details" in arguments else current["details"], status))
@@ -360,7 +404,7 @@ class ProgressStore:
             elif outcome is not None:
                 raise ProgressError("invalid_outcome")
             result.update(revision=expected + 1, updated_at=timestamp(), _request=request)
-            self._event(result, "milestone")
+            self._event(result, "milestone", added)
             self._write(connection, result); self._prune(connection, result["run_id"])
             return result
 

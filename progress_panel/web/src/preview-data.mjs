@@ -12,6 +12,7 @@ const base={schema_version:1,panel_kind:'relayforge_product',source:'agent_decla
     artifacts:[prd],approvals:[],readiness:{problem:'present',user:'present',goal:'present',scope:'present',non_goals:'present',success_signal:'present'},
     assumptions:{items:['默认按相关度排序'],total:1},questions:{items:[],total:0},blockers:{items:[],total:0},integrity:{status:'valid',affected:[]}},
   source_state:{status:'available',state_sha256:hash,checked_at:now},confirmation_request:null,outcome:null,
+  skill_uses:[{skill:'host:humanizer-zh',via:'direct_read',source:'agent_declared',recorded_at:now},{skill:'relayforge-product:to-prd',via:'context',source:'agent_declared',recorded_at:now}],
   workflow:'using-relayforge-product',skill_loads:[receipt('using-relayforge-product','workflow'),receipt('to-prd','skill')],created_at:now,updated_at:now,
   history:[{revision:1,at:now,kind:'milestone',status:'running',details:{current:'开始编写 PRD v1'},workflow_mode:'standard',stage:'prd'}]};
 const waiting={...base,status:'waiting',details:{...base.details,waiting_for:'user',reason:'请确认 PRD v1 的目标、范围与成功指标'},confirmation_request:{target_kind:'prd',artifact_id:'prd',version:'v1',sha256:hash,scope_summary:'目标、范围、成功指标',included_inputs:[]}};

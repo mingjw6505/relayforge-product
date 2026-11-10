@@ -141,6 +141,24 @@ class ProductTests(unittest.TestCase):
         self.assertTrue(self.server.call_tool("read_product_progress", {})["isError"])
         self.assertTrue(self.server.call_tool("start_product_progress", {**self.start,"source_binding":{"project_root":str(self.project),"state_path":"../outside.md"}})["isError"])
 
+    def test_skill_uses_survive_public_tool_loads_milestones_and_response_loss(self):
+        declaration = {"skill": "host:humanizer-zh", "via": "direct_read"}
+        run = self.call("start_product_progress", {**self.start, "skill_uses": [declaration]})
+        self.assertEqual(run["skill_uses"][0]["source"], "agent_declared")
+        loaded = self.call("load_product_skill", {"run_id": run["run_id"], "expected_revision": 1, "skill": "using-relayforge-product"})
+        args = self.update(loaded, skill_uses=[declaration, {"skill": "relayforge-product:to-prd", "via": "context"}])
+        updated = self.call("update_product_progress", args)
+        retried = self.call("update_product_progress", args)
+        self.assertEqual(updated, retried)
+        read = self.call("read_product_progress", {"run_id": run["run_id"]})
+        self.assertEqual(len(read["skill_uses"]), 2)
+        self.assertEqual(read["skill_uses"][0], run["skill_uses"][0])
+        self.assertEqual(read["workflow"], "using-relayforge-product")
+        self.assertEqual(len(read["skill_loads"]), 1)
+        self.assertEqual(len(read["history"][-1]["skill_uses"]), 1)
+        other = self.call("start_product_progress", self.start)
+        self.assertEqual(other["skill_uses"], [])
+
     def test_source_runtime_failures_are_bounded_and_explicit(self):
         with patch("progress_panel.source.shutil.which",return_value=None):
             self.assertEqual(collect(self.start["source_binding"])["source_state"]["error_code"],"node_unavailable")

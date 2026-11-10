@@ -10,7 +10,7 @@
     <div><dt>当前阶段</dt><dd data-ui="stage"></dd></div>
     <div><dt>当前产物</dt><dd data-ui="artifact"></dd></div>
     <div><dt>当前工作流</dt><dd class="rf-code" data-ui="workflow"></dd></div>
-    <div><dt>已加载 Skill</dt><dd class="rf-code" data-ui="skills"></dd></div>
+    <div><dt>Skill 记录</dt><dd class="rf-code" data-ui="skills"></dd></div>
   </dl>
   <p class="rf-stale" data-ui="stale" hidden>阶段暂无新申报；同步正常，产品工作可能仍在进行。</p>
   <footer class="rf-footer"><button class="rf-text-button" type="button" data-ui="details" aria-expanded="false" aria-controls="rf-records"><span data-ui="details-label">查看详情</span><span class="rf-chevron" aria-hidden="true">⌄</span></button></footer>
@@ -28,8 +28,8 @@
       <button class="rf-text-button rf-more" type="button" data-ui="more-history" hidden>查看全部记录</button>
     </section>
     <details class="rf-disclosure" data-ui="input-section"><summary>输入版本与审批依据</summary><div class="rf-inputs" data-ui="inputs"></div></details>
-    <details class="rf-disclosure" data-ui="load-section"><summary data-ui="load-heading">工作流与 Skill 加载记录</summary><ol class="rf-loads" data-ui="loads"></ol></details>
-    <p class="rf-source">产品状态来自最近核对的工作流快照，动作由 Agent 申报。Skill 已加载只表示读取说明。审批须在对话中明确确认。</p>
+    <details class="rf-disclosure" data-ui="load-section"><summary data-ui="load-heading">Skill 记录与来源</summary><ol class="rf-loads" data-ui="loads"></ol></details>
+    <p class="rf-source">产品状态来自最近核对的工作流快照，动作由 Agent 申报。Skill 工具读取与 Agent 使用申报分别记录，不代表执行成功；未申报的使用不会自动出现。审批须在对话中明确确认。</p>
     <div class="rf-settings"><span data-ui="updated"></span><button class="rf-text-button" data-ui="refresh" type="button">暂停刷新</button></div>
     <p class="rf-source" data-ui="checked"></p>
   </section>

@@ -244,7 +244,10 @@ When the bundled product progress tools are available, follow the
 [progress contract](references/progress-panel.md). After selecting and
 initializing/resuming the requirement, create one task card and retain its run_id
 and latest revision across specialist transitions. Use real source records and
-actual selected Skill loads. Update after registration, real waits, approval and
+actual selected Skill loads. Report every other actually read and applied Skill
+in `skill_uses` at start/the next milestone, including external, direct-file and
+host-provided instructions; flush pending declarations before ending the run.
+Keep Agent declarations separate from tool-read receipts. Update after registration, real waits, approval and
 invalidation. A stage draft delivery is not full product completion. Missing
 progress tools/runtime must not block product work or create restart loops.
 Use the recovery above to offer optional setup instead of silently degrading.

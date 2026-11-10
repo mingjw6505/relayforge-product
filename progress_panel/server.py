@@ -14,7 +14,7 @@ from typing import Any, BinaryIO
 from progress_panel.skills import load_bundled_skill
 from progress_panel.state import ProgressError, ProgressStore
 
-from progress_panel.protocol import RESOURCE_URI, tools, validate
+from progress_panel.protocol import RESOURCE_URI, SKILL_USE_GUIDANCE, tools, validate
 from progress_panel.source import binding, collect
 from progress_panel.state import public
 
@@ -110,7 +110,7 @@ class ProgressServer:
                 "instructions": (
                     "For RelayForge product work, select the requirement first, then start_product_progress once. "
                     "Reuse run_id and the latest revision across skills; load_product_skill only for selected bundled instructions. "
-                    "Update at real milestones, waiting confirmations and actual outcomes. "
+                    + SKILL_USE_GUIDANCE + " Update at real milestones, waiting confirmations and actual outcomes. "
                     "Product facts are imported read-only; never infer approval from a draft or skill load. "
                     "Keep standard/fast mode, stage delivery and product approval distinct. "
                     "Only explicit, version-bound user confirmation authorizes the existing approval workflow. "

@@ -38,6 +38,8 @@ approval and carry unconfirmed decisions into the spec as labeled assumptions.
 
 Reuse the controller's current run and latest revision under the
 [product progress contract](../using-relayforge-product/references/progress-panel.md).
+Report other actually read and applied Skills in `skill_uses` at the next milestone,
+including direct/host entry and external Skills; flush pending declarations before ending.
 When available, load this actually selected Skill through load_product_skill once,
 then update at real artifact/decision milestones and actual waits. Do not create
 another card, infer approval from completion, or bypass the existing confirmation

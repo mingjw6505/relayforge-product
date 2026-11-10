@@ -98,6 +98,33 @@ the same Skill. Do not preload planned skills or invent receipts for host loads,
 external skills or direct file reads. A receipt proves reading, not execution,
 approval or success. If unavailable, read the Skill normally and continue.
 
+For every other Skill actually read and applied to this task, including external
+plugins, direct file reads and host-provided instructions, send `skill_uses` on
+the next `start_product_progress` or `update_product_progress` milestone. Flush
+pending declarations before ending the run; do not reload instructions merely
+to fill the card. Never report planned use or metadata-only discovery.
+
+Each entry has only `skill` and `via`. Use the real catalog identity as
+`namespace:skill-name`: `host:name` for personal/system Skills, `project:name`
+for project Skills and `plugin-name:name` for plugins. Bare names mean
+`host:name`; qualify names to keep same-named Skills from different sources
+distinct. `via` is `direct_read`, `skill_tool` or `context`, according to how the
+instructions were received. For example:
+
+```json
+{"skill_uses": [{"skill": "host:humanizer-zh", "via": "direct_read"}]}
+```
+
+Omission or an empty array preserves prior declarations. Send up to 32 entries
+per call; a run retains up to 64 distinct Skill/channel pairs. Repeated pairs
+keep their first server reception time. The card merges namespaced identities
+while retaining separate tool-read receipts and Agent-declared channels. A
+declaration neither selects the current workflow nor proves execution/success.
+The panel cannot automatically observe unreported reads or host loads, so this
+is not a complete host audit. Never supply a forged hash, source or timestamp.
+If an older tool schema has no `skill_uses`, omit the unsupported field, briefly
+report the missing declaration coverage in chat, and continue product work.
+
 ## Milestones and product facts
 
 Use `update_product_progress` after real artifact registration, mode changes,

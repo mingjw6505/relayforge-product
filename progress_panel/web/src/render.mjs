@@ -44,6 +44,7 @@ export function createPanel(root, {onPauseToggle=()=>{}}={}) {
     for(const key of ['title','status','current','remaining','workflow','change','mode','stage','artifact','confirmation','readiness'])el(key).textContent=view[key];
     el('current-label').textContent=view.currentLabel;el('attention').textContent=view.attention;el('attention').hidden=!view.attention;
     el('skills').textContent=view.skills.map(s=>s.name).join(' · ')||'未记录';
+    el('skills').title=view.skills.map(s=>`${s.id}：${s.records.map(r=>r.label).join('；')}`).join('\n');
     const scroll=different?0:el('steps').scrollLeft;
     el('steps').replaceChildren(...snapshot.steps.map((step,index)=>{
       const li=node('li','',`rf-step-${step.status}`);li.dataset.connected=String(index>0&&snapshot.steps[index-1].status==='done');li.setAttribute('aria-label',`${step.label}：${stepNames[step.status]}`);
@@ -64,8 +65,16 @@ export function createPanel(root, {onPauseToggle=()=>{}}={}) {
       view.approvals.filter(r=>r.artifact===a.id).forEach(r=>group.append(node('p',`${view.available?({valid:'有效',stale:'失效',superseded:'已替代'}[r.state]||'未记录'):'上次记录 · 当前未核对'} · ${r.version} · ${time(r.at)} · ${r.scope}${r.includes_input_scope?'（包含登记的输入范围，不单独批准输入）':''}`)));
       return group;
     }));
-    el('load-section').hidden=!view.receipts.length;el('load-heading').textContent=`工作流与 Skill 加载记录 · ${view.receipts.length} 项`;
-    el('loads').replaceChildren(...view.receipts.map(r=>{const li=document.createElement('li');li.append(node('time',time(r.loaded_at)),node('span',r.name,'rf-load-name'),node('span',`已读取 · ${r.sha256.slice(0,8)}`));return li;}));
+    el('load-section').hidden=!view.skills.length;el('load-heading').textContent=`Skill 记录与来源 · ${view.skills.length} 项`;
+    el('loads').replaceChildren(...view.skills.map(skill=>{
+      const li=document.createElement('li');li.append(node('span',skill.id,'rf-load-name'));
+      for(const record of skill.records){
+        const evidence=node('div','','rf-load-evidence');
+        evidence.append(node('time',time(record.at)),node('span',`${record.label}${record.digest?` · ${record.digest.slice(0,8)}`:''}`));
+        li.append(evidence);
+      }
+      return li;
+    }));
     el('updated').textContent=`阶段申报 ${time(snapshot.updated_at)}`;
     el('checked').textContent=`源状态最近核对 ${time(snapshot.source_state?.checked_at)}；自动刷新只读取进度缓存，不监视源文件。`;
     renderHistory();syncControls();updateFreshness();

@@ -1,6 +1,6 @@
 {
   "name": "relayforge-product",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Product-side workflows for clarifying requirements, shaping user experience, writing PRDs, prototyping, and producing approved product specifications.",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
