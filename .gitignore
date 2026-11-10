@@ -9,3 +9,4 @@ build/
 .claude/
 .relayforge/
 __pycache__/
+docs/
