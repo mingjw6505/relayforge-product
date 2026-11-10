@@ -3,9 +3,19 @@
 
 // Read-only diagnostics: no downloads, installs, state writes or server restart.
 const {spawnSync} = require('node:child_process');
+const {readFileSync} = require('node:fs');
 const path = require('node:path');
 
 const pluginRoot = path.resolve(__dirname, '../../..');
+function packageInfo() {
+  const manifest = JSON.parse(readFileSync(path.join(pluginRoot, 'plugin.json'), 'utf8'));
+  let sourceRevision = null;
+  try {
+    const installed = JSON.parse(readFileSync(path.join(pluginRoot, '.codex-marketplace-install.json'), 'utf8'));
+    if (/^[a-f0-9]{40,64}$/.test(installed.revision)) sourceRevision = installed.revision;
+  } catch {} // Repository checkouts and other hosts need not have this marker.
+  return {name: manifest.name, version: manifest.version, root: pluginRoot, source_revision: sourceRevision};
+}
 const pythonProbe = [
   'import sys, json',
   'sqlite = False',
@@ -15,14 +25,18 @@ const pythonProbe = [
   'print(json.dumps({"version": list(sys.version_info[:3]), "executable": sys.executable, "sqlite3": sqlite}))',
 ].join('\n');
 
-function probe(command, args, run, options = {}) {
+function pythonEnvironment() {
   // Recent Python launchers can install a runtime on first launch. Disable that
   // behavior during diagnosis, including opt-in flags inherited from the host.
   const env = {...process.env, PYTHON_MANAGER_AUTOMATIC_INSTALL: 'false', PYTHONDONTWRITEBYTECODE: '1'};
   delete env.PYLAUNCHER_ALLOW_INSTALL;
   delete env.PYLAUNCHER_ALWAYS_INSTALL;
+  return env;
+}
+
+function probe(command, args, run, options = {}) {
   const result = run(command, args, {cwd: pluginRoot, encoding: 'utf8',
-    timeout: 5000, maxBuffer: 256 * 1024, windowsHide: true, shell: false, env, ...options});
+    timeout: 5000, maxBuffer: 256 * 1024, windowsHide: true, shell: false, env: pythonEnvironment(), ...options});
   if (result.error || result.status !== 0) {
     return {status: result.error?.code === 'ENOENT' ? 'missing_command' : 'probe_failed'};
   }
@@ -30,32 +44,45 @@ function probe(command, args, run, options = {}) {
   catch { return {status: 'probe_failed'}; }
 }
 
+function findPython({run = spawnSync, platform = process.platform, stopWhenReady = false} = {}) {
+  const candidates = platform === 'win32'
+    ? [['python', []], ['python3', []], ['py', ['-3']]] : [['python3', []], ['python', []]];
+  const results = [];
+  for (const [command, args] of candidates) {
+    const result = probe(command, [...args, '-c', pythonProbe], run);
+    if (result.status !== 'ok') {
+      results.push({command, args, status: result.status});
+      continue;
+    }
+    const value = result.value;
+    if (!value || !Array.isArray(value.version) || value.version.length !== 3 ||
+        !value.version.every(Number.isInteger) || typeof value.executable !== 'string' ||
+        !path.isAbsolute(value.executable) || typeof value.sqlite3 !== 'boolean') {
+      results.push({command, args, status: 'probe_failed'});
+      continue;
+    }
+    const supported = value.version[0] === 3 && value.version[1] >= 11;
+    const candidate = {command, args, version: value.version.join('.'), executable: value.executable,
+      status: !supported ? 'unsupported' : value.sqlite3 ? 'ready' : 'sqlite_unavailable'};
+    results.push(candidate);
+    if (stopWhenReady && candidate.status === 'ready') break;
+  }
+  return results;
+}
+
 function diagnose({component = 'progress', run = spawnSync, nodeVersion = process.versions.node,
-  platform = process.platform} = {}) {
+  platform = process.platform,
+  registration = JSON.parse(readFileSync(path.join(pluginRoot, '.mcp.json'), 'utf8')).mcpServers['relayforge-product-progress']} = {}) {
   if (!['progress', 'companion'].includes(component)) throw new Error('invalid_component');
   const node = {version: nodeVersion, status: Number(nodeVersion.split('.')[0]) >= 18 ? 'ready' : 'unsupported'};
-  const report = {component, platform, node, status: 'runtime_ready_host_unverified',
+  const report = {component, platform, plugin: packageInfo(), node, status: 'runtime_ready_host_unverified',
     host_ui: 'unverified', installation_candidates: []};
   if (node.status !== 'ready') report.installation_candidates.push('node');
   if (component === 'companion') {
     if (node.status !== 'ready') report.status = 'node_incompatible';
     return report;
   }
-  const candidates = [['python3', []], ['python', []]];
-  if (platform === 'win32') candidates.push(['py', ['-3']]);
-  const results = candidates.map(([command, args]) => {
-    const result = probe(command, [...args, '-c', pythonProbe], run);
-    if (result.status !== 'ok') return {command, args, status: result.status};
-    const value = result.value;
-    if (!value || !Array.isArray(value.version) || value.version.length !== 3 ||
-        !value.version.every(Number.isInteger) || typeof value.executable !== 'string' ||
-        !path.isAbsolute(value.executable) || typeof value.sqlite3 !== 'boolean') {
-      return {command, args, status: 'probe_failed'};
-    }
-    const supported = value.version[0] === 3 && value.version[1] >= 11;
-    return {command, args, version: value.version.join('.'), executable: value.executable,
-      status: !supported ? 'unsupported' : value.sqlite3 ? 'ready' : 'sqlite_unavailable'};
-  });
+  const results = findPython({run, platform});
   report.python = {candidates: results};
   const selected = results.find(item => item.status === 'ready');
   if (!selected) {
@@ -82,7 +109,9 @@ function diagnose({component = 'progress', run = spawnSync, nodeVersion = proces
   report.service = result.status === 'ok' && result.value?.id === 1 &&
     result.value?.result?.serverInfo?.name === 'relayforge-product-progress' ? 'ready' : 'unavailable';
   if (report.service !== 'ready') report.status = 'service_unavailable';
-  else if (selected.command !== 'python3') {
+  else if (!(registration.command === 'node' &&
+      JSON.stringify(registration.args) === JSON.stringify(['progress_panel/launch.cjs'])) &&
+      registration.command !== selected.command && registration.command !== selected.executable) {
     report.status = 'launch_command_mismatch';
     report.suggested_mcp = {command: selected.executable, args: ['-m', 'progress_panel.server'], cwd: pluginRoot};
   } else if (node.status !== 'ready') report.status = 'node_incompatible';
@@ -99,4 +128,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = {diagnose};
+module.exports = {diagnose, findPython, pythonEnvironment, pluginRoot};

@@ -200,7 +200,7 @@ def check_progress(root):
     native = read_json(root / ".mcp.json")
     if portable.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json":
         raise ValueError("Portable MCP schema is required")
-    expected = {"command": "python3", "args": ["-m", "progress_panel.server"], "cwd": "./"}
+    expected = {"command": "node", "args": ["progress_panel/launch.cjs"], "cwd": "./"}
     key = "relayforge-product-progress"
     if portable != {"$schema": portable["$schema"], "mcpServers": {key: {"type": "stdio", **expected}}}:
         raise ValueError("Unexpected portable product MCP registration")
@@ -212,9 +212,11 @@ def check_progress(root):
     for name in [".codex-plugin/plugin.json", ".claude-plugin/plugin.json"]:
         if read_json(root / name).get("mcpServers") != "./.mcp.json":
             raise ValueError(f"{name}: product MCP reference is missing")
-    for name in ["server.py", "state.py", "source.py", "skills.py", "protocol.py", "static/panel.html", "THIRD_PARTY_NOTICES.txt"]:
+    for name in ["launch.cjs", "server.py", "state.py", "source.py", "skills.py", "protocol.py", "static/panel.html", "THIRD_PARTY_NOTICES.txt"]:
         if not (root / "progress_panel" / name).is_file():
             raise ValueError(f"Missing product panel file: {name}")
+    if not (root / "skills/using-relayforge-product/scripts/panel-runtime.cjs").is_file():
+        raise ValueError("Missing product panel runtime selector")
     html = (root / "progress_panel/static/panel.html").read_text(encoding="utf-8")
     if ("RelayForge Product Progress" not in html or "read_product_progress" not in html or
             "{{" in html or f'"{manifest["version"]}"' not in html):
@@ -231,7 +233,7 @@ def run_checks(root, structure_only=False):
     node = shutil.which("node")
     if not node:
         raise ValueError("Node.js is required to check helper scripts and run regression tests")
-    for script in [*(root / "skills").rglob("*.cjs"), *(root / "skills").rglob("*.js")]:
+    for script in [*(root / "skills").rglob("*.cjs"), *(root / "skills").rglob("*.js"), root / "progress_panel/launch.cjs"]:
         subprocess.run([node, "--check", str(script)], check=True, cwd=root)
     subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "test", "-p", "test_*.py"], check=True, cwd=root)
     subprocess.run([node, "--test", *map(str, sorted((root / "test").glob("*.test.cjs")))], check=True, cwd=root)

@@ -97,6 +97,10 @@ The optional bundled product progress card shows product stages, artifacts and
 approval scope using the selected workflow's read-only snapshot. It uses local
 Python 3.11+ and Node.js 18+ for factual state collection, with no credentials,
 cloud services or hooks. Core product work can continue without the card.
+The MCP entry uses the bundled Node launcher to locate a compatible Python
+interpreter (python, python3 or the Windows py launcher), then starts the service
+with its actual executable path. A working python command is sufficient on
+Windows; a python3 alias is not required. Nothing is installed by the launcher.
 If a panel cannot start, the controller checks the affected runtime once and
 offers a concrete choice in chat: assisted installation after consent, manual
 setup instructions, or continuing without installation. Existing Python launch

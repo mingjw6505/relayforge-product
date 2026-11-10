@@ -48,7 +48,7 @@ test('missing Python is distinguished from old Python, missing sqlite and denied
 
 test('existing python and py launchers suggest a host command override rather than reinstalling', () => {
   for (const command of ['python', 'py']) {
-    const report = check({[command]: python([3, 12, 0])});
+    const report = check({[command]: python([3, 12, 0])}, {registration: {command: 'python3'}});
     assert.equal(report.status, 'launch_command_mismatch');
     assert.equal(report.python.selected.command, command);
     assert.equal(report.suggested_mcp.command, executable);

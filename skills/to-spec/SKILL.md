@@ -11,6 +11,9 @@ does not describe implementation code or publish to an issue tracker.
 
 ## Before writing
 
+Before drafting, apply the [product entry check](../using-relayforge-product/references/progress-panel.md#entry-check-for-every-product-skill),
+even when this Skill was invoked directly and no controller run exists yet.
+
 Read the [workflow contract](../using-relayforge-product/references/workflow-contract.md),
 active state, PRD, and relevant prototype notes. Run the controller's fingerprint
 check first. In standard mode, the PRD goal/scope and relevant prototype
@@ -76,4 +79,5 @@ Reuse the controller's current run and latest revision under the
 When available, load this actually selected Skill through load_product_skill once,
 then update at real artifact/decision milestones and actual waits. Do not create
 another card, infer approval from completion, or bypass the existing confirmation
-rules. If tools are unavailable, continue with the normal Skill and text workflow.
+rules. If tools are unavailable, perform the entry check's diagnostic and chat
+notice before continuing with the normal Skill and text workflow.

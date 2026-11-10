@@ -29,13 +29,18 @@ workflow.
 
 ## Panel availability
 
-At the start of requested product work, if bundled progress tools are absent,
+Before discovery questions or artifacts, apply the
+[product entry check](references/progress-panel.md#entry-check-for-every-product-skill),
+including a generic request such as “请使用插件帮我生成 PRD”. Do not assume the
+host already ran setup or that another selected product Skill did this check.
+If bundled progress tools are absent,
 follow [panel runtime recovery](references/panel-recovery.md) once. Use the same
 recovery after a panel/tool launch error, node_unavailable source result or a
 user report that a panel cannot open. Diagnose the affected component first;
 offer installation only for an evidenced runtime problem, with a concrete plan
 and explicit user choice in chat. Missing progress UI must not block requirement
-initialization or the requested product work. Do not repeatedly prompt after a
+initialization or the requested product work. State the unavailable-panel cause
+and diagnostic result in chat once; do not silently fall back. Do not repeatedly prompt after a
 decline, infer rendering success from a tool response, or install automatically.
 
 ## Identify the requirement

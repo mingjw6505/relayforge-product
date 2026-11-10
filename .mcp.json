@@ -1,10 +1,9 @@
 {
   "mcpServers": {
     "relayforge-product-progress": {
-      "command": "python3",
+      "command": "node",
       "args": [
-        "-m",
-        "progress_panel.server"
+        "progress_panel/launch.cjs"
       ],
       "cwd": "./"
     }

@@ -23,9 +23,18 @@ node <skill-dir>/scripts/panel-runtime.cjs progress
 node <skill-dir>/scripts/panel-runtime.cjs companion
 ```
 
+Use the actual installed Skill directory from this chat, not a repository copy
+or a cache on another computer. Read its root plugin.json version and check the
+checker file exists first. The report includes package identity/version/root and
+the optional Codex install revision. Older checkers may omit these fields; read
+the manifest separately in that case. A missing checker means package/version
+verification is needed, not that Node or Python needs installation. An update
+shown in plugin details does not by itself establish which Skill files an
+already-running chat loaded.
+
 Run only the command for the affected component. Each Python probe and service
-probe has a five-second limit. The checker tests python3, python and (on Windows)
-py -3, their versions and sqlite3, then performs an MCP initialize handshake in
+probe has a five-second limit. The checker tests python and python3 (preferring
+python on Windows), plus Windows py -3, their versions and sqlite3, then performs an MCP initialize handshake in
 the plugin directory. It creates no task or progress cache and installs nothing.
 
 If Node itself cannot run, use the host's native shell to locate node and check
@@ -49,6 +58,14 @@ unavailable; offer manual setup instructions without claiming anything is missin
 Do not infer a panel opened from a successful tool response. If the host supplies
 no render-failure signal, detect missing tools/launch errors and respond to user
 reports; do not promise automatic detection of an invisible rendering failure.
+
+Current registrations use `node progress_panel/launch.cjs` to select an existing
+compatible Python and start the stdio server with its absolute executable. The
+launcher checks python first on Windows, stops at the first compatible runtime,
+inherits stdio and writes startup errors only to stderr. If launch_command_mismatch
+is reported by an older installed package that still registers python3 directly,
+use an explicit host-local override or upgrade to a package with the automatic
+launcher; installing another Python is not the repair for that mismatch.
 
 ## Let the user choose in chat
 

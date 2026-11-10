@@ -16,7 +16,8 @@ class ValidationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="relayforge-panel-package-") as directory:
             root = Path(directory)
             files = ["plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json", "mcp.json", ".mcp.json",
-                     *["progress_panel/" + p for p in ["server.py", "state.py", "source.py", "skills.py", "protocol.py", "static/panel.html", "THIRD_PARTY_NOTICES.txt"]]]
+                     "skills/using-relayforge-product/scripts/panel-runtime.cjs",
+                     *["progress_panel/" + p for p in ["launch.cjs", "server.py", "state.py", "source.py", "skills.py", "protocol.py", "static/panel.html", "THIRD_PARTY_NOTICES.txt"]]]
             for name in files:
                 target = root / name
                 target.parent.mkdir(parents=True, exist_ok=True)

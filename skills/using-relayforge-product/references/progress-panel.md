@@ -8,6 +8,38 @@ reports a panel failure, follow [panel runtime recovery](panel-recovery.md) once
 diagnose first, offer an explicit installation choice for evidenced runtime
 problems, and continue text progress while the optional choice is pending.
 
+## Entry check for every product Skill
+
+Apply this before the first discovery/interview question or artifact, including
+a direct specialist invocation or a generic “请使用插件帮我生成 PRD”. Reuse a
+check already performed for this conversation; do not repeat it on each stage.
+This is an agent instruction, not a host startup hook or proof that setup ran.
+
+1. Inspect whether start_product_progress and update_product_progress are
+   actually available in this chat. An installed/enabled plugin or an MCP
+   initialize handshake alone does not prove the host exposed its tools.
+2. If absent, immediately say in chat that the product progress service is not
+   loaded and that runtime diagnosis is starting. Follow
+   [panel runtime recovery](panel-recovery.md) once, even when entering through
+   a specialist. Report the observed installed package version/path and result.
+   If runtimes pass but tools remain absent, say that MCP loading/host connection
+   is still unverified; do not claim a missing environment or prescribe an install.
+   Continue independent product work with explicit text progress.
+3. If present, use the controller to select/initialize/resume the requirement,
+   then call start_product_progress once before substantive product work. A
+   specialist with no run must bootstrap through the controller instead of
+   skipping the card. A PRD-only request stays stage_delivery targeting prd;
+   do not expand its scope to a full workflow just to create a card.
+4. Inspect the actual start result. On launch/tool/source errors, perform recovery
+   and report the result. Reuse an existing run_id on subsequent transitions.
+   A successful call means the service answered; rendering remains unverified
+   unless the host or user supplies evidence. A reported invisible panel must
+   still trigger recovery even when the tools exist.
+
+This check must precede the specialist's optional-tool fallback. Do not silently
+skip it because product work is allowed to continue without a card. Never create
+test requirements or product cards just to troubleshoot plugin setup.
+
 ## One task, one selected requirement
 
 Resolve the requirement and initialize/resume its state through the existing

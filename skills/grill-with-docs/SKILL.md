@@ -6,6 +6,9 @@ disable-model-invocation: true
 
 # Grill with docs
 
+Before interviewing or artifacts, apply the [product entry check](../using-relayforge-product/references/progress-panel.md#entry-check-for-every-product-skill),
+even when this Skill was invoked directly and no controller run exists yet.
+
 Read the [workflow contract](../using-relayforge-product/references/workflow-contract.md)
 and use the `grilling` interview method for the active requirement, while recording
 durable product decisions in the requirement workflow directory.
@@ -38,4 +41,5 @@ Reuse the controller's current run and latest revision under the
 When available, load this actually selected Skill through load_product_skill once,
 then update at real artifact/decision milestones and actual waits. Do not create
 another card, infer approval from completion, or bypass the existing confirmation
-rules. If tools are unavailable, continue with the normal Skill and text workflow.
+rules. If tools are unavailable, perform the entry check's diagnostic and chat
+notice before continuing with the normal Skill and text workflow.
